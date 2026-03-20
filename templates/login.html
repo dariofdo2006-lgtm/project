@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Calendar - Sign In</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <h1 id="form-title">Sign In</h1>
+        <div id="error-msg" class="error-msg" style="display: none;"></div>
+        
+        <form id="auth-form">
+            <div class="input-group">
+                <label>User Name</label>
+                <input type="text" id="username" placeholder="✉  Enter User Name" required>
+            </div>
+            
+            <div class="input-group">
+                <label id="pass-label">Password</label>
+                <input type="password" id="password" placeholder="🔒  Enter Password" required>
+            </div>
+            
+            <button type="submit" id="submit-btn" class="btn-primary">SIGN IN</button>
+        </form>
+        
+        <div class="switch-mode">
+            <span id="switch-lbl">Don't have an account?</span>
+            <button type="button" class="btn-text" id="switch-btn">Sign up</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

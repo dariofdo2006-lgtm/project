@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Calendar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Inject server variables into javascript
+        window.CURRENT_YEAR = {{ year }};
+        window.CURRENT_MONTH = {{ month }};
+        window.SELECTED_DATE = "{{ selected_date }}";
+    </script>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>❖ BUDGET</h2>
+            </div>
+            <a href="/" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Home</span>
+            </a>
+            <div class="nav-item" style="cursor: default;">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Expenses/Income</span>
+            </div>
+            <!-- Add a simple button to logout -->
+            <div style="flex: 1;"></div>
+            <a href="/logout" class="nav-item">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sign Out</span>
+            </a>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">{{ month_name }} {{ year }}</div>
+            </header>
+
+            <div class="dashboard-panes">
+                <!-- Calendar (rendered by JS for simplicity) -->
+                <div class="calendar-panel">
+                    <div class="cal-header">
+                        <button class="btn-icon" onclick="changeMonth(-1)">&lt;</button>
+                        <div class="cal-title">{{ month_name }} {{ year }}</div>
+                        <button class="btn-icon" onclick="changeMonth(1)">&gt;</button>
+                    </div>
+                    <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                        <!-- JS injects days here -->
+                    </div>
+                </div>
+
+                <!-- Summary Sidebar -->
+                <div class="summary-panel">
+                    <div class="summary-header">
+                        <div class="summary-title">Monthly Summary</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="stats-grid">
+                        <div class="stat-row">
+                            <div class="stat-label">Total Income</div>
+                            <div class="stat-val text-success">₹{{ "%.2f"|format(total_income) }}</div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-label">Total Expenses</div>
+                            <div class="stat-val text-danger">₹{{ "%.2f"|format(total_expenses) }}</div>
+                        </div>
+                        <div class="stat-row">
+                            <div class="stat-label">Cash short/extra</div>
+                            <div class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ "%.2f"|format(cash_diff) }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    <div style="padding: 10px 30px; font-weight: bold; color: var(--brand-blue);">Daily Transactions ({{ selected_date }})</div>
+                    
+                    <div class="transactions">
+                        {% if daily_expenses %}
+                            {% for e in daily_expenses %}
+                            <div class="transaction-card">
+                                <div class="tx-top">
+                                    <div class="tx-name">{{ e[3] }}</div>
+                                    <div class="tx-amount">₹{{ "%.2f"|format(e[1]) }}</div>
+                                </div>
+                                <div class="tx-bot">
+                                    <div>{{ e[2].upper() }}</div>
+                                    <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 14px;">No expenses for this date.</div>
+                        {% endif %}
+                    </div>
+
+                    <button class="add-btn" onclick="openAddModal()">+ Add {{ "Expense" if cash_diff >= 0 else "Transaction" }}</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <h3>Add Transaction</h3>
+            <div class="input-group">
+                <label>Date</label>
+                <input type="text" id="expense-date" value="{{ selected_date }}" readonly>
+            </div>
+            <div class="input-group">
+                <label>Amount (₹)</label>
+                <input type="number" step="0.01" id="expense-amount" placeholder="0.00">
+            </div>
+            <div class="input-group">
+                <label>Category</label>
+                <select id="expense-category" style="width: 100%; height: 45px; background: var(--bg-dark); color: white; border: 1px solid var(--border-dark); border-radius: 6px;">
+                    <optgroup label="Expenses">
+                        {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Income">
+                        {% for cat in income_categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Description / Name</label>
+                <input type="text" id="expense-name" placeholder="E.g., Dinner">
+            </div>
+            <div class="actions">
+                <button class="btn-text" onclick="closeAddModal()">Cancel</button>
+                <button class="btn-primary" style="width: 120px;" onclick="saveExpense()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
