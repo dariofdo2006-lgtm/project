@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.db
+budget.db
+*.pyc
+.vscode/
+.env
