@@ -1,15 +1,45 @@
 import os
 import calendar
+import csv
+import io
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from database import Database
 
 app = Flask(__name__)
 # In production, set this from an environment variable!
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "budget_calendar_super_secret")
 
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+# Only makedirs here if you want it on launch, otherwise just ensure it
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 # Create a single database instance
 db = Database()
+
+def process_recurring_expenses(user_id):
+    now = datetime.now()
+    cur_year, cur_month = now.year, now.month
+    prev_month, prev_year = (12, cur_year - 1) if cur_month == 1 else (cur_month - 1, cur_year)
+        
+    prev_month_str = f"{prev_year:04d}-{prev_month:02d}"
+    db.cursor.execute("SELECT amount, category, name, image_path, date FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{prev_month_str}%"))
+    prev_expenses = db.cursor.fetchall()
+    
+    cur_month_str = f"{cur_year:04d}-{cur_month:02d}"
+    db.cursor.execute("SELECT count(*) FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{cur_month_str}%"))
+    count = db.cursor.fetchone()[0]
+    
+    if count == 0 and prev_expenses:
+        for exp in prev_expenses:
+            try:
+                day = exp[4].split("-")[2]
+                new_date = f"{cur_year:04d}-{cur_month:02d}-{day}"
+                db.add_expense(user_id, new_date, exp[0], exp[1], exp[2], exp[3], True)
+            except Exception:
+                pass
 
 CATEGORIES = [
     "Rent", "Grocery", "Food", "Water", "Electricity", "Transportation", 
@@ -59,7 +89,8 @@ def index():
         cash_diff=cash_diff,
         daily_expenses=daily_expenses,
         categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES
+        income_categories=INCOME_CATEGORIES,
+        active_view='home'
     )
 
 @app.route("/login", methods=["GET", "POST"])
@@ -72,6 +103,10 @@ def login():
         user_id = db.login_user(username, password)
         if user_id:
             session["user_id"] = user_id
+            try:
+                process_recurring_expenses(user_id)
+            except Exception as e:
+                print(f"Recurring processing failed: {e}")
             return jsonify({"success": True})
         return jsonify({"success": False, "message": "Invalid username or password"})
         
@@ -103,12 +138,35 @@ def add_expense():
     amount = float(data.get("amount", 0))
     category = data.get("category")
     name = data.get("name")
+    is_recurring = data.get("is_recurring", False)
     
     if not (date and amount and category and name):
         return jsonify({"success": False, "message": "All fields required"}), 400
         
-    db.add_expense(user_id, date, amount, category, name)
-    return jsonify({"success": True})
+    expense_id = db.add_expense(user_id, date, amount, category, name, None, is_recurring)
+    return jsonify({"success": True, "id": expense_id})
+
+@app.route("/api/expense/<int:expense_id>/receipt", methods=["POST"])
+def upload_receipt(expense_id):
+    if "user_id" not in session:
+        return jsonify({"success": False}), 401
+    
+    if 'file' not in request.files:
+        return jsonify({"success": False}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"success": False}), 400
+        
+    filename = secure_filename(file.filename)
+    filename = f"{expense_id}_{filename}"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+    
+    db.cursor.execute("UPDATE expenses SET image_path = ? WHERE id = ? AND user_id = ?", (filename, expense_id, session["user_id"]))
+    db.conn.commit()
+    
+    return jsonify({"success": True, "filename": filename})
 
 @app.route("/api/expense/<int:expense_id>", methods=["DELETE"])
 def delete_expense(expense_id):
@@ -117,6 +175,129 @@ def delete_expense(expense_id):
         
     db.delete_expense(expense_id, session["user_id"])
     return jsonify({"success": True})
+
+@app.route("/api/expense/<int:expense_id>", methods=["PUT"])
+def update_expense(expense_id):
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+        
+    data = request.json
+    user_id = session["user_id"]
+    date = data.get("date")
+    amount = float(data.get("amount", 0))
+    category = data.get("category")
+    name = data.get("name")
+    is_recurring = data.get("is_recurring", False)
+    
+    if not (date and amount and category and name):
+        return jsonify({"success": False, "message": "All fields required"}), 400
+        
+    db.update_expense(expense_id, user_id, date, amount, category, name, is_recurring)
+    return jsonify({"success": True})
+
+@app.route("/category/<path:category_name>")
+def category_view(category_name):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+    expenses = db.get_expenses_by_category(user_id, category_name)
+    
+    return render_template(
+        "category.html",
+        category_name=category_name,
+        expenses=expenses,
+        categories=CATEGORIES,
+        income_categories=INCOME_CATEGORIES,
+        active_view=category_name
+    )
+
+@app.route("/api/export")
+def export_csv():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+        
+    user_id = session["user_id"]
+    db.cursor.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
+    rows = db.cursor.fetchall()
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Amount", "Category", "Description"])
+    writer.writerows(rows)
+    
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=budget_export.csv"}
+    )
+
+@app.route("/search")
+def search_view():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+        
+    user_id = session["user_id"]
+    q = request.args.get("q", "")
+    
+    search_pattern = f"%{q}%"
+    db.cursor.execute("""
+        SELECT id, date, amount, name, image_path 
+        FROM expenses 
+        WHERE user_id = ? AND (name LIKE ? OR category LIKE ?) 
+        ORDER BY date DESC
+    """, (user_id, search_pattern, search_pattern))
+    
+    expenses = db.cursor.fetchall()
+    
+    return render_template(
+        "category.html",
+        category_name=f'Search Results for "{q}"',
+        expenses=expenses,
+        categories=CATEGORIES,
+        income_categories=INCOME_CATEGORIES,
+        active_view="search"
+    )
+
+@app.route("/yearly")
+def yearly_view():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+        
+    user_id = session["user_id"]
+    now = datetime.now()
+    year = request.args.get("year", now.year, type=int)
+    
+    yearly_income = 0.0
+    yearly_expenses = 0.0
+    monthly_incomes = []
+    monthly_expenses = []
+    
+    for m in range(1, 13):
+        raw_expenses = db.get_expenses_by_month(user_id, year, m)
+        m_inc = 0.0
+        m_exp = 0.0
+        for _, amount, category in raw_expenses:
+            if category in INCOME_CATEGORIES:
+                m_inc += amount
+            else:
+                m_exp += amount
+        monthly_incomes.append(m_inc)
+        monthly_expenses.append(m_exp)
+        yearly_income += m_inc
+        yearly_expenses += m_exp
+                
+    return render_template(
+        "yearly.html",
+        year=year,
+        yearly_income=yearly_income,
+        yearly_expenses=yearly_expenses,
+        monthly_incomes=monthly_incomes,
+        monthly_expenses=monthly_expenses,
+        categories=CATEGORIES,
+        income_categories=INCOME_CATEGORIES,
+        active_view="yearly"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

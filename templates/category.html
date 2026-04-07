@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block topbar_title %}Category: {{ category_name }}{% endblock %}
+
+{% block content %}
+<div style="padding: 30px;">
+    <div style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
+        <h2 style="margin-bottom: 20px;">Transactions for {{ category_name }}</h2>
+        <div class="transactions" style="max-height: 600px; overflow-y: auto;">
+            {% if expenses %}
+                {% for e in expenses %}
+                <div class="transaction-card" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="tx-name" style="font-size: 16px;">{{ e[3] }}</div>
+                        <div class="tx-bot" style="margin-top:5px;">{{ e[1] }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="tx-amount" style="font-size: 18px; margin-bottom: 5px;">₹{{ "%.2f"|format(e[2]) }}</div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                            {% if e[4] %}
+                            <a href="/static/uploads/{{ e[4] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
+                            {% endif %}
+                            <button class="btn-text" style="color:var(--brand-blue)" onclick='openEditModal({{ e[0] }}, {{ e[1]|tojson }}, {{ e[2] }}, {{ category_name|tojson }}, {{ e[3]|tojson }})'>Edit</button>
+                            <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="color: var(--text-muted); text-align: center; margin-top: 40px;">No transactions found for this category.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

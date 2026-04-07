@@ -91,6 +91,32 @@ function changeMonth(delta) {
 }
 
 function openAddModal() {
+    const editIdEl = document.getElementById('edit-expense-id');
+    if (editIdEl) editIdEl.value = '';
+    document.getElementById('expense-date').value = window.SELECTED_DATE || new Date().toISOString().split('T')[0];
+    document.getElementById('expense-amount').value = '';
+    document.getElementById('expense-name').value = '';
+    
+    const titleEl = document.getElementById('modal-title');
+    if (titleEl) titleEl.innerText = "Add Transaction";
+    
+    const recEl = document.getElementById('expense-recurring');
+    if (recEl) recEl.checked = false;
+    
+    document.getElementById('add-modal').classList.add('active');
+}
+
+function openEditModal(id, date, amount, category, name, is_recurring = 0) {
+    document.getElementById('edit-expense-id').value = id;
+    document.getElementById('expense-date').value = date;
+    document.getElementById('expense-amount').value = parseFloat(amount).toFixed(2);
+    document.getElementById('expense-category').value = category;
+    document.getElementById('expense-name').value = name;
+    
+    const recEl = document.getElementById('expense-recurring');
+    if (recEl) recEl.checked = !!is_recurring;
+    
+    document.getElementById('modal-title').innerText = "Edit Transaction";
     document.getElementById('add-modal').classList.add('active');
 }
 
@@ -99,22 +125,55 @@ function closeAddModal() {
 }
 
 async function saveExpense() {
+    const editIdEl = document.getElementById('edit-expense-id');
+    const id = editIdEl ? editIdEl.value : '';
     const date = document.getElementById('expense-date').value;
     const amount = document.getElementById('expense-amount').value;
     const category = document.getElementById('expense-category').value;
     const name = document.getElementById('expense-name').value;
+    
+    const recEl = document.getElementById('expense-recurring');
+    const is_recurring = recEl ? recEl.checked : false;
 
-    const res = await fetch("/api/expense", {
-        method: "POST",
+    const endpoint = id ? `/api/expense/${id}` : "/api/expense";
+    const method = id ? "PUT" : "POST";
+
+    const res = await fetch(endpoint, {
+        method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, amount, category, name })
+        body: JSON.stringify({ date, amount, category, name, is_recurring })
     });
-    if(res.ok) window.location.reload();
+    if(res.ok) {
+        const data = await res.json();
+        const expenseId = id || data.id;
+        const fileInput = document.getElementById('expense-receipt');
+        if (fileInput && fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            await fetch(`/api/expense/${expenseId}/receipt`, {
+                method: "POST",
+                body: formData
+            });
+        }
+        window.location.reload();
+    }
 }
 
 async function deleteExpense(id) {
     if(confirm("Delete this transaction?")) {
         const res = await fetch(`/api/expense/${id}`, { method: "DELETE" });
         if(res.ok) window.location.reload();
+    }
+}
+
+function toggleSidebar(id) {
+    const el = document.getElementById(id);
+    const chev = document.getElementById(id.replace('-sub', '-chev'));
+    if (el.style.display === 'block') {
+        el.style.display = 'none';
+        if (chev) chev.innerText = '›';
+    } else {
+        el.style.display = 'block';
+        if (chev) chev.innerText = '˅';
     }
 }

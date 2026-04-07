@@ -25,6 +25,7 @@ class Database:
                 category TEXT NOT NULL,
                 name TEXT NOT NULL,
                 image_path TEXT,
+                is_recurring BOOLEAN DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
@@ -33,6 +34,8 @@ class Database:
         columns = [info[1] for info in self.cursor.fetchall()]
         if "image_path" not in columns:
             self.cursor.execute("ALTER TABLE expenses ADD COLUMN image_path TEXT")
+        if "is_recurring" not in columns:
+            self.cursor.execute("ALTER TABLE expenses ADD COLUMN is_recurring BOOLEAN DEFAULT 0")
 
         self.conn.commit()
 
@@ -59,10 +62,11 @@ class Database:
         self.conn.commit()
         return True
 
-    def add_expense(self, user_id, date, amount, category, name, image_path=None):
-        self.cursor.execute("INSERT INTO expenses (user_id, date, amount, category, name, image_path) VALUES (?, ?, ?, ?, ?, ?)",
-                            (user_id, date, amount, category, name, image_path))
+    def add_expense(self, user_id, date, amount, category, name, image_path=None, is_recurring=False):
+        self.cursor.execute("INSERT INTO expenses (user_id, date, amount, category, name, image_path, is_recurring) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (user_id, date, amount, category, name, image_path, is_recurring))
         self.conn.commit()
+        return self.cursor.lastrowid
 
     def get_expenses_by_month(self, user_id, year, month):
         month_str = f"{year:04d}-{month:02d}"
@@ -70,16 +74,16 @@ class Database:
         return self.cursor.fetchall()
 
     def get_expenses_by_date(self, user_id, date):
-        self.cursor.execute("SELECT id, amount, category, name, image_path FROM expenses WHERE user_id = ? AND date = ?", (user_id, date))
+        self.cursor.execute("SELECT id, amount, category, name, image_path, is_recurring FROM expenses WHERE user_id = ? AND date = ?", (user_id, date))
         return self.cursor.fetchall()
 
     def get_expenses_by_category(self, user_id, category):
-        self.cursor.execute("SELECT id, date, amount, name, image_path FROM expenses WHERE user_id = ? AND category = ? ORDER BY date DESC", (user_id, category))
+        self.cursor.execute("SELECT id, date, amount, name, image_path, is_recurring FROM expenses WHERE user_id = ? AND category = ? ORDER BY date DESC", (user_id, category))
         return self.cursor.fetchall()
 
-    def update_expense(self, expense_id, user_id, date, amount, category, name, image_path=None):
-        self.cursor.execute("UPDATE expenses SET date = ?, amount = ?, category = ?, name = ?, image_path = ? WHERE id = ? AND user_id = ?",
-                            (date, amount, category, name, image_path, expense_id, user_id))
+    def update_expense(self, expense_id, user_id, date, amount, category, name, is_recurring=False):
+        self.cursor.execute("UPDATE expenses SET date = ?, amount = ?, category = ?, name = ?, is_recurring = ? WHERE id = ? AND user_id = ?",
+                            (date, amount, category, name, is_recurring, expense_id, user_id))
         self.conn.commit()
 
     def delete_expense(self, expense_id, user_id):

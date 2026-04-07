@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Calendar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>❖ BUDGET</h2>
+            </div>
+            
+            <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Home</span>
+            </a>
+            
+            <!-- Expenses Collapsible -->
+            <div class="nav-item collapsible-header" onclick="toggleSidebar('expenses-sub')">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Expenses</span>
+                <span class="chev" id="expenses-chev">›</span>
+            </div>
+            <div class="sub-nav" id="expenses-sub">
+                {% for cat in categories %}
+                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
+                    <span class="nav-text">{{ cat }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Income Collapsible -->
+            <div class="nav-item collapsible-header" onclick="toggleSidebar('income-sub')">
+                <span class="nav-icon">📥</span>
+                <span class="nav-text">Income</span>
+                <span class="chev" id="income-chev">›</span>
+            </div>
+            <div class="sub-nav" id="income-sub">
+                {% for cat in income_categories %}
+                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
+                    <span class="nav-text">{{ cat }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Yearly Report</span>
+            </a>
+
+            <!-- Spacer -->
+            <div style="flex: 1;"></div>
+            
+            <a href="/api/export" class="nav-item" style="color: var(--success);">
+                <span class="nav-icon">📥</span>
+                <span class="nav-text">Export CSV</span>
+            </a>
+            
+            <a href="/logout" class="nav-item">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sign Out</span>
+            </a>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+                <div class="topbar-search">
+                    <form action="/search" method="GET" style="display:flex; align-items:center;">
+                        <input type="text" name="q" placeholder="Search transactions..." style="background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:6px; color:white; padding:8px 16px; width:250px;">
+                        <button type="submit" style="background:var(--panel-dark); border:1px solid var(--border-dark); color:white; padding:8px 12px; border-radius:6px; margin-left:8px; cursor:pointer;">Search</button>
+                    </form>
+                </div>
+            </header>
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modals if needed by child templates -->
+    {% block modals %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
