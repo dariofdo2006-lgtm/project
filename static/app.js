@@ -177,3 +177,11 @@ function toggleSidebar(id) {
         if (chev) chev.innerText = '˅';
     }
 }
+
+function toggleMobileSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('active');
+    }
+}
+
