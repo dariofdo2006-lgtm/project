@@ -18,7 +18,7 @@
                         <div class="tx-amount" style="font-size: 18px; margin-bottom: 5px;">₹{{ "%.2f"|format(e[2]) }}</div>
                         <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
                             {% if e[4] %}
-                            <a href="/static/uploads/{{ e[4] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
+                            <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
                             {% endif %}
                             <button class="btn-text" style="color:var(--brand-blue)" onclick='openEditModal({{ e[0] }}, {{ e[1]|tojson }}, {{ e[2] }}, {{ category_name|tojson }}, {{ e[3]|tojson }})'>Edit</button>
                             <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>

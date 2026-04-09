@@ -63,7 +63,7 @@
                         <div>{{ e[2].upper() }}</div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             {% if e[4] %}
-                            <a href="/static/uploads/{{ e[4] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
+                            <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
                             {% endif %}
                             <button class="btn-text" style="color:var(--brand-blue)" onclick='openEditModal({{ e[0] }}, {{ selected_date|tojson }}, {{ e[1] }}, {{ e[2]|tojson }}, {{ e[3]|tojson }}, {{ e[5]|default(0)|tojson }})'>Edit</button>
                             <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>

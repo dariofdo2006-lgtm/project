@@ -2,6 +2,7 @@ import os
 import calendar
 import csv
 import io
+import base64
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
@@ -25,11 +26,11 @@ def process_recurring_expenses(user_id):
     prev_month, prev_year = (12, cur_year - 1) if cur_month == 1 else (cur_month - 1, cur_year)
         
     prev_month_str = f"{prev_year:04d}-{prev_month:02d}"
-    db.cursor.execute("SELECT amount, category, name, image_path, date FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{prev_month_str}%"))
+    db.execute("SELECT amount, category, name, image_path, date FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{prev_month_str}%"))
     prev_expenses = db.cursor.fetchall()
     
     cur_month_str = f"{cur_year:04d}-{cur_month:02d}"
-    db.cursor.execute("SELECT count(*) FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{cur_month_str}%"))
+    db.execute("SELECT count(*) FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{cur_month_str}%"))
     count = db.cursor.fetchone()[0]
     
     if count == 0 and prev_expenses:
@@ -158,15 +159,23 @@ def upload_receipt(expense_id):
     if file.filename == '':
         return jsonify({"success": False}), 400
         
-    filename = secure_filename(file.filename)
-    filename = f"{expense_id}_{filename}"
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
+    encoded_string = base64.b64encode(file.read()).decode('utf-8')
+    data_uri = f"data:{file.mimetype};base64,{encoded_string}"
     
-    db.cursor.execute("UPDATE expenses SET image_path = ? WHERE id = ? AND user_id = ?", (filename, expense_id, session["user_id"]))
-    db.conn.commit()
+    db.execute("UPDATE expenses SET image_path = ? WHERE id = ? AND user_id = ?", (data_uri, expense_id, session["user_id"]))
     
-    return jsonify({"success": True, "filename": filename})
+    return jsonify({"success": True})
+
+@app.route("/api/receipt/<int:expense_id>")
+def view_receipt(expense_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+        
+    receipt_data = db.get_receipt(expense_id, session["user_id"])
+    if not receipt_data:
+        return "No receipt found", 404
+        
+    return f'<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="{receipt_data}" style="max-width:100%;max-height:100vh;"></body></html>'
 
 @app.route("/api/expense/<int:expense_id>", methods=["DELETE"])
 def delete_expense(expense_id):
@@ -218,7 +227,7 @@ def export_csv():
         return redirect(url_for("login"))
         
     user_id = session["user_id"]
-    db.cursor.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
+    db.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
     rows = db.cursor.fetchall()
     
     output = io.StringIO()
@@ -241,8 +250,8 @@ def search_view():
     q = request.args.get("q", "")
     
     search_pattern = f"%{q}%"
-    db.cursor.execute("""
-        SELECT id, date, amount, name, image_path 
+    db.execute("""
+        SELECT id, date, amount, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image 
         FROM expenses 
         WHERE user_id = ? AND (name LIKE ? OR category LIKE ?) 
         ORDER BY date DESC
