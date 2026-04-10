@@ -308,5 +308,17 @@ def yearly_view():
         active_view="yearly"
     )
 
+@app.route("/calculator")
+def calculator_view():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+        
+    return render_template(
+        "calculator.html",
+        categories=CATEGORIES,
+        income_categories=INCOME_CATEGORIES,
+        active_view="calculator"
+    )
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

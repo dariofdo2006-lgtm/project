@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block topbar_title %}Calculator{% endblock %}
+
+{% block content %}
+<div class="calculator-container" style="display: flex; justify-content: center; align-items: center; flex: 1; padding: 20px;">
+    <div class="calculator">
+        <input type="text" class="calc-display" id="calc-display" disabled value="0">
+        <div class="calc-buttons">
+            <button class="calc-btn calc-action" onclick="clearCalc()">C</button>
+            <button class="calc-btn calc-action" onclick="deleteChar()">DEL</button>
+            <button class="calc-btn calc-op" onclick="appendOp('%')">%</button>
+            <button class="calc-btn calc-op" onclick="appendOp('/')">÷</button>
+            
+            <button class="calc-btn" onclick="appendNum('7')">7</button>
+            <button class="calc-btn" onclick="appendNum('8')">8</button>
+            <button class="calc-btn" onclick="appendNum('9')">9</button>
+            <button class="calc-btn calc-op" onclick="appendOp('*')">×</button>
+            
+            <button class="calc-btn" onclick="appendNum('4')">4</button>
+            <button class="calc-btn" onclick="appendNum('5')">5</button>
+            <button class="calc-btn" onclick="appendNum('6')">6</button>
+            <button class="calc-btn calc-op" onclick="appendOp('-')">−</button>
+            
+            <button class="calc-btn" onclick="appendNum('1')">1</button>
+            <button class="calc-btn" onclick="appendNum('2')">2</button>
+            <button class="calc-btn" onclick="appendNum('3')">3</button>
+            <button class="calc-btn calc-op" onclick="appendOp('+')">+</button>
+            
+            <button class="calc-btn calc-zero" onclick="appendNum('0')">0</button>
+            <button class="calc-btn" onclick="appendNum('.')">.</button>
+            <button class="calc-btn calc-equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const display = document.getElementById('calc-display');
+    let currentInput = '0';
+    let justCalculated = false;
+
+    function updateDisplay() {
+        display.value = currentInput;
+    }
+
+    function appendNum(num) {
+        if (currentInput === '0' || justCalculated) {
+            currentInput = num === '.' ? '0.' : num;
+            justCalculated = false;
+        } else {
+            currentInput += num;
+        }
+        updateDisplay();
+    }
+
+    function appendOp(op) {
+        if (justCalculated) justCalculated = false;
+        // avoid double ops
+        const lastChar = currentInput.slice(-1);
+        if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+            currentInput = currentInput.slice(0, -1) + op;
+        } else {
+            currentInput += op;
+        }
+        updateDisplay();
+    }
+
+    function clearCalc() {
+        currentInput = '0';
+        updateDisplay();
+    }
+
+    function deleteChar() {
+        if (justCalculated) { currentInput = '0'; }
+        else {
+            currentInput = currentInput.slice(0, -1) || '0';
+        }
+        updateDisplay();
+    }
+
+    function calculate() {
+        try {
+            // Safely evaluating to avoid syntax error on eval. Ensure input is formatted.
+            // Replace our UI division multiplication signs with standard ones in our UI this is handled but just in case
+            // currentInput uses standard js operators
+            let result = eval(currentInput);
+            
+            // if floating point, limit decimals
+            if(result % 1 !== 0) {
+                result = parseFloat(result.toFixed(6));
+            }
+            
+            currentInput = String(result);
+            justCalculated = true;
+        } catch (e) {
+            currentInput = 'Error';
+            justCalculated = true;
+        }
+        updateDisplay();
+    }
+</script>
+{% endblock %}
