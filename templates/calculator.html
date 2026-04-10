@@ -6,8 +6,10 @@
 <div class="calculator-container" style="display: flex; flex-direction: column; align-items: stretch; gap: 40px; max-width: 900px; margin: 0 auto; padding: 40px 20px;">
     
     <!-- Standard Calc -->
-    <div style="display: flex; justify-content: center;">
-    <div class="calculator">
+    <div class="calc-wrapper">
+        <h2 style="margin-bottom: 20px; font-weight: 700;">Standard Calculator</h2>
+        <div style="display: flex; justify-content: center;">
+        <div class="calculator">
         <input type="text" class="calc-display" id="calc-display" disabled value="0">
         <div class="calc-buttons">
             <button class="calc-btn calc-action" onclick="clearCalc()">C</button>
@@ -34,7 +36,8 @@
             <button class="calc-btn" onclick="appendNum('.')">.</button>
             <button class="calc-btn calc-equals" onclick="calculate()">=</button>
         </div>
-    </div>
+        </div>
+        </div>
     </div>
 
     <!-- 50/30/20 Budget Calc -->
