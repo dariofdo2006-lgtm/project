@@ -3,7 +3,10 @@
 {% block topbar_title %}Calculator{% endblock %}
 
 {% block content %}
-<div class="calculator-container" style="display: flex; justify-content: center; align-items: center; flex: 1; padding: 20px;">
+<div class="calculator-container" style="display: flex; flex-direction: column; align-items: stretch; gap: 40px; max-width: 900px; margin: 0 auto; padding: 40px 20px;">
+    
+    <!-- Standard Calc -->
+    <div style="display: flex; justify-content: center;">
     <div class="calculator">
         <input type="text" class="calc-display" id="calc-display" disabled value="0">
         <div class="calc-buttons">
@@ -30,6 +33,93 @@
             <button class="calc-btn calc-zero" onclick="appendNum('0')">0</button>
             <button class="calc-btn" onclick="appendNum('.')">.</button>
             <button class="calc-btn calc-equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- 50/30/20 Budget Calc -->
+    <div class="budget-wrapper" style="margin-top: 20px;">
+        <h2 style="margin-bottom: 20px; font-weight: 700;">50/30/20 Budget Calculator</h2>
+        <div class="budget-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
+            
+            <h3 style="color: var(--brand-blue); margin-bottom: 20px; font-size: 18px;">Enter your income to get your 50/30/20 budget</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 14px; color: var(--text-muted);">How often do you receive your income?</label>
+                    <select id="budget-freq" style="background: var(--bg-dark); color: white; border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateTargets()">
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Annually</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 14px; color: var(--text-muted);">What is your after-tax income?</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: bold; font-size: 16px;">₹</span>
+                        <input type="number" id="budget-income" placeholder="0" style="background: white; color: black; border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; width: 140px; font-family: 'Inter', sans-serif;" oninput="updateTargets()">
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border-dark); margin: 30px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--brand-blue); font-size: 18px;">Personalize your monthly budget</h3>
+            </div>
+
+            <div class="budget-columns" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px;">
+                <!-- Needs -->
+                <div class="budget-col">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 16px;">Needs</span>
+                        <span id="needs-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (50%)</span>
+                    </div>
+                    <div id="needs-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Housing" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Utilities" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Groceries" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Transportation" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Childcare" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Healthcare" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    </div>
+                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                </div>
+
+                <!-- Wants -->
+                <div class="budget-col">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 16px;">Wants</span>
+                        <span id="wants-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (30%)</span>
+                    </div>
+                    <div id="wants-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Entertainment" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Dining Out" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Hobbies" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Splurges" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    </div>
+                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                </div>
+
+                <!-- Savings -->
+                <div class="budget-col">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 16px;">Savings</span>
+                        <span id="savings-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (20%)</span>
+                    </div>
+                    <div id="savings-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Emergency Fund" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Retirement" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Vacation" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    </div>
+                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px;">
+                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);">Cancel</button>
+                <button class="btn-primary" style="border-radius: 20px; padding: 12px 30px; width: auto; margin-top: 0; font-size: 14px;">Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -97,6 +187,25 @@
             justCalculated = true;
         }
         updateDisplay();
+    }
+
+    // --- 50/30/20 Budget Logic ---
+    function updateTargets() {
+        const freq = document.getElementById('budget-freq').value;
+        const incText = document.getElementById('budget-income').value;
+        const inc = parseFloat(incText) || 0;
+        
+        let monthlyIncome = inc;
+        if (freq === 'yearly') monthlyIncome = inc / 12;
+        if (freq === 'weekly') monthlyIncome = inc * 4.3333;
+        
+        const needs = monthlyIncome * 0.5;
+        const wants = monthlyIncome * 0.3;
+        const savings = monthlyIncome * 0.2;
+        
+        document.getElementById('needs-target').innerText = `₹${needs.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (50%)`;
+        document.getElementById('wants-target').innerText = `₹${wants.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (30%)`;
+        document.getElementById('savings-target').innerText = `₹${savings.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (20%)`;
     }
 </script>
 {% endblock %}
