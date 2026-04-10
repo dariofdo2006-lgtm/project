@@ -313,11 +313,14 @@ def calculator_view():
     if "user_id" not in session:
         return redirect(url_for("login"))
         
+    calc_type = request.args.get("type", "standard")
+        
     return render_template(
         "calculator.html",
         categories=CATEGORIES,
         income_categories=INCOME_CATEGORIES,
-        active_view="calculator"
+        active_view=f"calculator_{calc_type}",
+        calc_type=calc_type
     )
 
 if __name__ == "__main__":
