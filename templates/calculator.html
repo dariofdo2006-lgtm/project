@@ -74,57 +74,55 @@
                 <h3 style="color: var(--brand-blue); font-size: 18px;">Personalize your monthly budget</h3>
             </div>
 
-            <div class="budget-columns" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px;">
+            <div class="budget-columns" style="display: flex; flex-direction: column; gap: 40px;">
                 <!-- Needs -->
-                <div class="budget-col">
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: bold; font-size: 16px;">Needs</span>
-                        <span id="needs-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (50%)</span>
+                <div class="budget-col" style="display: flex; flex-direction: column; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Needs</span>
+                        <div style="text-align: right;">
+                            <span id="needs-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: ₹0 (50%)</span>
+                            <span id="needs-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: ₹0</span>
+                        </div>
                     </div>
-                    <div id="needs-list" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Housing" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Utilities" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Groceries" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Transportation" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Childcare" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Healthcare" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    <div id="needs-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS injected items -->
                     </div>
-                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                    <div onclick="addBudgetItem('needs-list', 'needs-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
 
                 <!-- Wants -->
-                <div class="budget-col">
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: bold; font-size: 16px;">Wants</span>
-                        <span id="wants-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (30%)</span>
+                <div class="budget-col" style="display: flex; flex-direction: column; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Wants</span>
+                        <div style="text-align: right;">
+                            <span id="wants-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: ₹0 (30%)</span>
+                            <span id="wants-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: ₹0</span>
+                        </div>
                     </div>
-                    <div id="wants-list" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Entertainment" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Dining Out" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Hobbies" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Splurges" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    <div id="wants-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS injected items -->
                     </div>
-                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                    <div onclick="addBudgetItem('wants-list', 'wants-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
 
                 <!-- Savings -->
-                <div class="budget-col">
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: bold; font-size: 16px;">Savings</span>
-                        <span id="savings-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600;">₹0 (20%)</span>
+                <div class="budget-col" style="display: flex; flex-direction: column; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Savings</span>
+                        <div style="text-align: right;">
+                            <span id="savings-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: ₹0 (20%)</span>
+                            <span id="savings-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: ₹0</span>
+                        </div>
                     </div>
-                    <div id="savings-list" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Emergency Fund" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Retirement" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
-                        <div class="b-item" style="display: flex; align-items: center; gap: 8px;"><input type="text" value="Vacation" readonly style="flex:1; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px;"><span style="font-weight:bold; font-size: 14px;">₹</span><input type="number" placeholder="0" style="width:75px; background:white; color:black; border:1px solid #ccc; padding:8px; border-radius:6px; font-size:13px;"></div>
+                    <div id="savings-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS injected items -->
                     </div>
-                    <div style="margin-top: 12px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer;">+ Add</div>
+                    <div onclick="addBudgetItem('savings-list', 'savings-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px;">
-                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);">Cancel</button>
-                <button class="btn-primary" style="border-radius: 20px; padding: 12px 30px; width: auto; margin-top: 0; font-size: 14px;">Save Changes</button>
+                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);" onclick="window.location.reload()">Reset Calculator</button>
             </div>
         </div>
     </div>
@@ -137,7 +135,7 @@
     let justCalculated = false;
 
     function updateDisplay() {
-        display.value = currentInput;
+        if(display) display.value = currentInput;
     }
 
     function appendNum(num) {
@@ -177,16 +175,10 @@
 
     function calculate() {
         try {
-            // Safely evaluating to avoid syntax error on eval. Ensure input is formatted.
-            // Replace our UI division multiplication signs with standard ones in our UI this is handled but just in case
-            // currentInput uses standard js operators
             let result = eval(currentInput);
-            
-            // if floating point, limit decimals
             if(result % 1 !== 0) {
                 result = parseFloat(result.toFixed(6));
             }
-            
             currentInput = String(result);
             justCalculated = true;
         } catch (e) {
@@ -198,8 +190,13 @@
 
     // --- 50/30/20 Budget Logic ---
     function updateTargets() {
-        const freq = document.getElementById('budget-freq').value;
-        const incText = document.getElementById('budget-income').value;
+        const freqElement = document.getElementById('budget-freq');
+        const incElement = document.getElementById('budget-income');
+        
+        if (!freqElement || !incElement) return;
+
+        const freq = freqElement.value;
+        const incText = incElement.value;
         const inc = parseFloat(incText) || 0;
         
         let monthlyIncome = inc;
@@ -210,9 +207,60 @@
         const wants = monthlyIncome * 0.3;
         const savings = monthlyIncome * 0.2;
         
-        document.getElementById('needs-target').innerText = `₹${needs.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (50%)`;
-        document.getElementById('wants-target').innerText = `₹${wants.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (30%)`;
-        document.getElementById('savings-target').innerText = `₹${savings.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (20%)`;
+        document.getElementById('needs-target').innerText = \`Target: ₹\${needs.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (50%)\`;
+        document.getElementById('wants-target').innerText = \`Target: ₹\${wants.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (30%)\`;
+        document.getElementById('savings-target').innerText = \`Target: ₹\${savings.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})} (20%)\`;
+        
+        updateSums();
     }
+
+    function updateSums() {
+        ['needs', 'wants', 'savings'].forEach(cat => {
+            let sum = 0;
+            const elements = document.querySelectorAll(\`.\${cat}-val\`);
+            elements.forEach(input => {
+                sum += parseFloat(input.value) || 0;
+            });
+            const sumEl = document.getElementById(\`\${cat}-sum\`);
+            if(sumEl) sumEl.innerText = \`Total: ₹\${sum.toLocaleString()}\`;
+        });
+    }
+
+    function addBudgetItem(listId, valClass, initialName = '', initialVal = '') {
+        const list = document.getElementById(listId);
+        if (!list) return;
+
+        const div = document.createElement('div');
+        div.className = 'b-item';
+        div.style.cssText = 'display: flex; align-items: stretch; gap: 8px; margin-bottom: 5px;';
+        
+        div.innerHTML = \`
+            <input type="text" placeholder="Item name" value="\${initialName}" style="flex:1; min-width: 80px; background:transparent; color:var(--text-light); border:1px solid var(--border-dark); padding:8px 10px; border-radius:6px; font-size:13px; outline:none; height: 35px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 0 8px; height: 35px; box-sizing: border-box;">
+                <span style="font-weight:bold; font-size: 14px; color: black; line-height: 1;">₹</span>
+                <input type="number" placeholder="0" class="b-item-val \${valClass}" value="\${initialVal}" oninput="updateSums()" style="width:70px; background:transparent; color:black; border:none; padding:0 4px; font-size:13px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            </div>
+            <button onclick="this.parentElement.remove(); updateSums();" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 35px;">&times;</button>
+        \`;
+        list.appendChild(div);
+    }
+
+    // Initialize default items on load
+    document.addEventListener('DOMContentLoaded', () => {
+        if(document.getElementById('needs-list')) {
+            addBudgetItem('needs-list', 'needs-val', 'Housing');
+            addBudgetItem('needs-list', 'needs-val', 'Utilities');
+            addBudgetItem('needs-list', 'needs-val', 'Groceries');
+            addBudgetItem('needs-list', 'needs-val', 'Transportation');
+            
+            addBudgetItem('wants-list', 'wants-val', 'Entertainment');
+            addBudgetItem('wants-list', 'wants-val', 'Dining Out');
+            
+            addBudgetItem('savings-list', 'savings-val', 'Emergency Fund');
+            addBudgetItem('savings-list', 'savings-val', 'Retirement');
+            
+            updateTargets();
+        }
+    });
 </script>
 {% endblock %}
