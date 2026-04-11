@@ -4,7 +4,6 @@ import csv
 import io
 import base64
 from datetime import datetime
-from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from database import Database
 
@@ -251,7 +250,7 @@ def search_view():
     
     search_pattern = f"%{q}%"
     db.execute("""
-        SELECT id, date, amount, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image 
+        SELECT id, date, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring 
         FROM expenses 
         WHERE user_id = ? AND (name LIKE ? OR category LIKE ?) 
         ORDER BY date DESC

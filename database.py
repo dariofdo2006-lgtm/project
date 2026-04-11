@@ -111,7 +111,7 @@ class Database:
         return self.cursor.fetchall()
 
     def get_expenses_by_category(self, user_id, category):
-        query = "SELECT id, date, amount, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring FROM expenses WHERE user_id = ? AND category = ? ORDER BY date DESC"
+        query = "SELECT id, date, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring FROM expenses WHERE user_id = ? AND category = ? ORDER BY date DESC"
         self.execute(query, (user_id, category))
         return self.cursor.fetchall()
 
