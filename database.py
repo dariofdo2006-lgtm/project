@@ -55,6 +55,36 @@ class Database:
             )
         ''')
         
+        self.execute('''
+            CREATE TABLE IF NOT EXISTS calculator_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                data TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(user_id, type)
+            )
+        ''')
+        
+        self.execute('''
+            CREATE TABLE IF NOT EXISTS user_settings (
+                user_id INTEGER PRIMARY KEY,
+                currency_symbol TEXT DEFAULT '₹',
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        self.execute('''
+            CREATE TABLE IF NOT EXISTS custom_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                cat_type TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(user_id, name, cat_type)
+            )
+        ''')
+        
         if self.is_postgres:
             self.cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='expenses'")
             columns = [info[0] for info in self.cursor.fetchall()]
@@ -69,7 +99,14 @@ class Database:
 
     def register_user(self, username, password):
         try:
-            self.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            if self.is_postgres:
+                self.cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id", (username, password))
+                user_id = self.cursor.fetchone()[0]
+            else:
+                self.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+                user_id = self.cursor.lastrowid
+            
+            self.seed_default_categories(user_id)
             return True
         except Exception: # Catch IntegrityError from either library
             return False
@@ -126,3 +163,59 @@ class Database:
         self.execute("SELECT image_path FROM expenses WHERE id = ? AND user_id = ?", (expense_id, user_id))
         result = self.cursor.fetchone()
         return result[0] if result else None
+
+    def save_calculator_state(self, user_id, calc_type, data):
+        if self.is_postgres:
+            query = "INSERT INTO calculator_data (user_id, type, data) VALUES (%s, %s, %s) ON CONFLICT(user_id, type) DO UPDATE SET data=EXCLUDED.data"
+        else:
+            query = "REPLACE INTO calculator_data (user_id, type, data) VALUES (?, ?, ?)"
+        self.execute(query, (user_id, calc_type, data))
+
+    def get_calculator_state(self, user_id, calc_type):
+        self.execute("SELECT data FROM calculator_data WHERE user_id = ? AND type = ?", (user_id, calc_type))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_settings(self, user_id):
+        self.execute("SELECT currency_symbol FROM user_settings WHERE user_id = ?", (user_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else "₹"
+        
+    def update_settings(self, user_id, currency):
+        if self.is_postgres:
+            query = "INSERT INTO user_settings (user_id, currency_symbol) VALUES (%s, %s) ON CONFLICT(user_id) DO UPDATE SET currency_symbol=EXCLUDED.currency_symbol"
+        else:
+            query = "REPLACE INTO user_settings (user_id, currency_symbol) VALUES (?, ?)"
+        self.execute(query, (user_id, currency))
+
+    def seed_default_categories(self, user_id):
+        expense_cats = ["Rent", "Grocery", "Food", "Water", "Electricity", "Transportation", "Clothing", "Online Shopping", "Hospital", "Education", "Insurance", "Entertainment", "Credit Card", "Emergency Fund", "Investment", "Other"]
+        income_cats = ["Wages", "Interest/dividends", "Miscellaneous", "Gift"]
+        for cat in expense_cats:
+            self.add_category(user_id, cat, 'expense')
+        for cat in income_cats:
+            self.add_category(user_id, cat, 'income')
+
+    def get_categories(self, user_id, cat_type=None):
+        self.execute("SELECT count(*) FROM custom_categories WHERE user_id = ?", (user_id,))
+        if self.cursor.fetchone()[0] == 0:
+            self.seed_default_categories(user_id)
+            
+        if cat_type:
+            self.execute("SELECT name FROM custom_categories WHERE user_id = ? AND cat_type = ? ORDER BY id", (user_id, cat_type))
+        else:
+            self.execute("SELECT name, cat_type FROM custom_categories WHERE user_id = ? ORDER BY id", (user_id,))
+        return [row[0] for row in self.cursor.fetchall()] if cat_type else self.cursor.fetchall()
+
+    def add_category(self, user_id, name, cat_type):
+        try:
+            if self.is_postgres:
+                self.cursor.execute("INSERT INTO custom_categories (user_id, name, cat_type) VALUES (%s, %s, %s)", (user_id, name, cat_type))
+            else:
+                self.execute("INSERT INTO custom_categories (user_id, name, cat_type) VALUES (?, ?, ?)", (user_id, name, cat_type))
+            return True
+        except Exception:
+            return False
+
+    def delete_category(self, user_id, name, cat_type):
+        self.execute("DELETE FROM custom_categories WHERE user_id = ? AND name = ? AND cat_type = ?", (user_id, name, cat_type))

@@ -15,7 +15,7 @@
                         <div class="tx-bot" style="margin-top:5px;">{{ e[1] }} • {{ e[3] }}</div>
                     </div>
                     <div style="text-align: right;">
-                        <div class="tx-amount" style="font-size: 18px; margin-bottom: 5px;">₹{{ "%.2f"|format(e[2]) }}</div>
+                        <div class="tx-amount" style="font-size: 18px; margin-bottom: 5px;">{{ currency }}{{ "%.2f"|format(e[2]) }}</div>
                         <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
                             {% if e[5] %}
                             <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>

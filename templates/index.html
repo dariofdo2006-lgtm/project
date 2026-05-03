@@ -12,6 +12,24 @@
 {% block topbar_title %}{{ month_name }} {{ year }}{% endblock %}
 
 {% block content %}
+<div id="settings-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background: var(--panel-dark); border: 2px solid var(--success); color: var(--text-light); padding: 15px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); flex-direction: column; gap: 8px; font-size: 13px; z-index: 1000; max-width: 240px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <strong style="color: white; font-size: 14px;">✨ Quick Tip</strong>
+        <span onclick="this.parentElement.parentElement.style.display='none'" style="color: var(--text-muted); cursor: pointer; font-size: 16px;">&times;</span>
+    </div>
+    <span style="color: var(--text-muted); line-height: 1.4;">Head to settings to personalize your currency symbol and categories!</span>
+    <a href="/settings" style="color: var(--success); font-weight: bold; text-decoration: none; margin-top: 4px;">Go to Settings &rarr;</a>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (!sessionStorage.getItem('settingsTipShown')) {
+            document.getElementById('settings-toast').style.display = 'flex';
+            sessionStorage.setItem('settingsTipShown', 'true');
+        }
+    });
+</script>
+
 <div class="dashboard-panes">
     <!-- Calendar -->
     <div class="calendar-panel">
@@ -34,16 +52,16 @@
         <div class="stats-grid">
             <div class="stat-row">
                 <div class="stat-label">Total Income</div>
-                <div class="stat-val text-success">₹{{ "%.2f"|format(total_income) }}</div>
+                <div class="stat-val text-success">{{ currency }}{{ "%.2f"|format(total_income) }}</div>
             </div>
             <div class="stat-row">
                 <div class="stat-label">Total Expenses</div>
-                <div class="stat-val text-danger">₹{{ "%.2f"|format(total_expenses) }}</div>
+                <div class="stat-val text-danger">{{ currency }}{{ "%.2f"|format(total_expenses) }}</div>
             </div>
             <div class="stat-row">
                 <div class="stat-label">Cash short/extra</div>
                 <div class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    ₹{{ "%.2f"|format(cash_diff) }}
+                    {{ currency }}{{ "%.2f"|format(cash_diff) }}
                 </div>
             </div>
         </div>
@@ -57,7 +75,7 @@
                 <div class="transaction-card">
                     <div class="tx-top">
                         <div class="tx-name">{{ e[3] }}</div>
-                        <div class="tx-amount">₹{{ "%.2f"|format(e[1]) }}</div>
+                        <div class="tx-amount">{{ currency }}{{ "%.2f"|format(e[1]) }}</div>
                     </div>
                     <div class="tx-bot">
                         <div>{{ e[2].upper() }}</div>
@@ -82,22 +100,25 @@
 {% endblock %}
 
 {% block modals %}
-<!-- Add Modal -->
-<div class="modal-overlay" id="add-modal">
-    <div class="modal">
-        <h3 id="modal-title">Add Transaction</h3>
+<!-- Add Slide Panel -->
+<div class="side-panel-overlay" id="add-modal-overlay">
+    <div class="side-panel" id="add-modal-panel">
+        <div class="side-panel-header">
+            <h3 id="modal-title">Add Transaction</h3>
+            <button class="close-btn" onclick="closeAddModal()">&times;</button>
+        </div>
         <input type="hidden" id="edit-expense-id" value="">
         <div class="input-group">
-            <label>Date</label>
+            <label for="expense-date">Date</label>
             <input type="text" id="expense-date" value="{{ selected_date }}" readonly>
         </div>
         <div class="input-group">
-            <label>Amount (₹)</label>
+            <label for="expense-amount">Amount ({{ currency }})</label>
             <input type="number" step="0.01" id="expense-amount" placeholder="0.00">
         </div>
         <div class="input-group">
-            <label>Category</label>
-            <select id="expense-category" style="width: 100%; height: 45px; background: var(--bg-dark); color: white; border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 16px; font-family: 'Inter', sans-serif;">
+            <label for="expense-category">Category</label>
+            <select id="expense-category">
                 <optgroup label="Expenses">
                     {% for cat in categories %}
                         <option value="{{ cat }}">{{ cat }}</option>
@@ -111,20 +132,20 @@
             </select>
         </div>
         <div class="input-group">
-            <label>Name / Description</label>
+            <label for="expense-name">Name / Description</label>
             <input type="text" id="expense-name" placeholder="e.g. Netflix Subscription">
         </div>
-        <div class="input-group" style="display:flex; align-items:center; gap:10px;">
-            <input type="checkbox" id="expense-recurring" style="width: auto; flex: none;">
-            <label style="margin: 0; flex: 1; text-align: left;">Repeat Monthly</label>
+        <div class="input-group" style="display:flex; align-items:center; flex-direction:row; gap:12px;">
+            <input type="checkbox" id="expense-recurring">
+            <label for="expense-recurring" style="margin: 0; font-size: 15px; color: var(--text-light); font-weight: 500;">Repeat Monthly</label>
         </div>
         <div class="input-group">
-            <label>Receipt Image (Optional)</label>
-            <input type="file" id="expense-receipt" accept="image/*" style="padding: 10px; background: var(--bg-dark); color: white; border: 1px solid var(--border-dark); border-radius: 8px; width: 100%; box-sizing: border-box;">
+            <label for="expense-receipt">Receipt Image (Optional)</label>
+            <input type="file" id="expense-receipt" accept="image/*">
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <div style="display: flex; gap: 10px; margin-top: 40px;">
             <button class="btn-outline" style="flex:1;" onclick="closeAddModal()">Cancel</button>
-            <button class="btn-primary" style="width: 120px;" onclick="saveExpense()">Save</button>
+            <button class="btn-primary" style="flex:2; margin-top: 0;" onclick="saveExpense()">Save Transaction</button>
         </div>
     </div>
 </div>

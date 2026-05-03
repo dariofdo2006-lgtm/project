@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     errorMsg.innerText = "Account created! You can now log in.";
                     setTimeout(() => switchBtn.click(), 1500);
                 } else {
+                    sessionStorage.removeItem('settingsTipShown');
                     window.location.href = "/";
                 }
             } else {
@@ -51,9 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const daysInMonth = new Date(window.CURRENT_YEAR, window.CURRENT_MONTH, 0).getDate();
         calGrid.innerHTML = "";
         
+        calGrid.className = 'calendar-grid';
+
         // Add headers
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(d => {
-            calGrid.innerHTML += `<div style="text-align:center;color:var(--text-muted);font-size:12px;font-weight:bold;">${d}</div>`;
+            calGrid.innerHTML += `<div class="calendar-day-header">${d}</div>`;
         });
 
         // Determine first day of month (0 = Sun, 1 = Mon...)
@@ -63,23 +66,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Blanks before start
         for(let i=0; i<firstDay; i++) {
-            calGrid.innerHTML += `<div></div>`;
+            calGrid.innerHTML += `<div class="calendar-day empty"></div>`;
         }
+        
+        // Find today
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         // Days
         for(let day=1; day<=daysInMonth; day++) {
             const dateStr = `${window.CURRENT_YEAR}-${String(window.CURRENT_MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isSelected = dateStr === window.SELECTED_DATE;
-            const style = isSelected ? "background: white; color: black;" : "background: black; color: white;";
+            const isToday = dateStr === todayStr;
+            
+            let classes = 'calendar-day';
+            if (isSelected) classes += ' selected';
+            if (isToday) classes += ' today';
             
             calGrid.innerHTML += `
-                <div style="${style} border: 1px solid var(--border-dark); border-radius: 8px; padding: 10px; cursor: pointer; min-height: 50px;" 
-                     onclick="window.location.href='/?year=${window.CURRENT_YEAR}&month=${window.CURRENT_MONTH}&date=${dateStr}'">
-                    <div style="font-weight: bold;">${day}</div>
+                <div class="${classes}" onclick="window.location.href='/?year=${window.CURRENT_YEAR}&month=${window.CURRENT_MONTH}&date=${dateStr}'">
+                    <div class="calendar-day-num">${day}</div>
                 </div>
             `;
         }
     }
+    // Allow closing modals safely by clicking outside
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('side-panel-overlay')) {
+            e.target.classList.remove('active');
+            const panel = e.target.querySelector('.side-panel');
+            if (panel) panel.classList.remove('active');
+        }
+    });
+
+    // Support ESC key to safely exit overlays and sidemenu
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.side-panel-overlay.active, .side-panel.active, .sidebar.active').forEach(el => {
+                el.classList.remove('active');
+            });
+        }
+    });
+
+
 });
 
 function changeMonth(delta) {
@@ -103,7 +132,8 @@ function openAddModal() {
     const recEl = document.getElementById('expense-recurring');
     if (recEl) recEl.checked = false;
     
-    document.getElementById('add-modal').classList.add('active');
+    document.getElementById('add-modal-overlay').classList.add('active');
+    document.getElementById('add-modal-panel').classList.add('active');
 }
 
 function openEditModal(id, date, amount, category, name, is_recurring = 0) {
@@ -117,11 +147,15 @@ function openEditModal(id, date, amount, category, name, is_recurring = 0) {
     if (recEl) recEl.checked = !!is_recurring;
     
     document.getElementById('modal-title').innerText = "Edit Transaction";
-    document.getElementById('add-modal').classList.add('active');
+    document.getElementById('add-modal-overlay').classList.add('active');
+    document.getElementById('add-modal-panel').classList.add('active');
 }
 
 function closeAddModal() {
-    document.getElementById('add-modal').classList.remove('active');
+    document.getElementById('add-modal-panel').classList.remove('active');
+    setTimeout(() => {
+        document.getElementById('add-modal-overlay').classList.remove('active');
+    }, 300); // Wait for slide animation
 }
 
 async function saveExpense() {
@@ -156,6 +190,13 @@ async function saveExpense() {
             });
         }
         window.location.reload();
+    } else {
+        try {
+            const errData = await res.json();
+            alert(errData.message || "Failed to save transaction.");
+        } catch(e) {
+            alert("Failed to save transaction. Please check your inputs.");
+        }
     }
 }
 

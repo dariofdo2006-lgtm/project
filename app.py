@@ -1,9 +1,10 @@
 import os
 import calendar
-import csv
+from fpdf import FPDF
 import io
 import base64
 from datetime import datetime
+import json
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from database import Database
 
@@ -41,12 +42,19 @@ def process_recurring_expenses(user_id):
             except Exception:
                 pass
 
-CATEGORIES = [
-    "Rent", "Grocery", "Food", "Water", "Electricity", "Transportation", 
-    "Clothing", "Online Shopping", "Hospital", "Education", "Insurance", 
-    "Entertainment", "Credit Card", "Emergency Fund", "Investment", "Other"
-]
-INCOME_CATEGORIES = ["Wages", "Interest/dividends", "Miscellaneous", "Gift"]
+@app.context_processor
+def inject_global_vars():
+    if "user_id" in session:
+        user_id = session["user_id"]
+        currency = db.get_settings(user_id)
+        expense_cats = db.get_categories(user_id, 'expense')
+        income_cats = db.get_categories(user_id, 'income')
+        return dict(
+            currency=currency,
+            categories=expense_cats,
+            income_categories=income_cats
+        )
+    return dict(categories=[], income_categories=[], currency="₹")
 
 @app.route("/")
 def index():
@@ -66,9 +74,10 @@ def index():
     total_expenses = 0.0
     
     # Process monthly numbers
+    income_categories = db.get_categories(user_id, 'income')
     for row in raw_expenses:
         _, amount, category = row
-        if category in INCOME_CATEGORIES:
+        if category in income_categories:
             total_income += amount
         else:
             total_expenses += amount
@@ -88,8 +97,6 @@ def index():
         total_expenses=total_expenses,
         cash_diff=cash_diff,
         daily_expenses=daily_expenses,
-        categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES,
         active_view='home'
     )
 
@@ -135,7 +142,10 @@ def add_expense():
     data = request.json
     user_id = session["user_id"]
     date = data.get("date")
-    amount = float(data.get("amount", 0))
+    try:
+        amount = float(data.get("amount") or 0)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": "Invalid amount"}), 400
     category = data.get("category")
     name = data.get("name")
     is_recurring = data.get("is_recurring", False)
@@ -192,7 +202,10 @@ def update_expense(expense_id):
     data = request.json
     user_id = session["user_id"]
     date = data.get("date")
-    amount = float(data.get("amount", 0))
+    try:
+        amount = float(data.get("amount") or 0)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": "Invalid amount"}), 400
     category = data.get("category")
     name = data.get("name")
     is_recurring = data.get("is_recurring", False)
@@ -215,13 +228,11 @@ def category_view(category_name):
         "category.html",
         category_name=category_name,
         expenses=expenses,
-        categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES,
         active_view=category_name
     )
 
 @app.route("/api/export")
-def export_csv():
+def export_pdf():
     if "user_id" not in session:
         return redirect(url_for("login"))
         
@@ -229,15 +240,27 @@ def export_csv():
     db.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
     rows = db.cursor.fetchall()
     
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Date", "Amount", "Category", "Description"])
-    writer.writerows(rows)
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, "Budget Export", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(10)
     
+    pdf.set_font("helvetica", size=10)
+    with pdf.table() as table:
+        header_row = table.row()
+        for header in ["Date", "Amount", "Category", "Description"]:
+            header_row.cell(header)
+        for data_row in rows:
+            table_row = table.row()
+            for datum in data_row:
+                table_row.cell(str(datum))
+    
+    pdf_bytes = bytes(pdf.output())
     return Response(
-        output.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-disposition": "attachment; filename=budget_export.csv"}
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={"Content-disposition": "attachment; filename=budget_export.pdf"}
     )
 
 @app.route("/search")
@@ -262,8 +285,6 @@ def search_view():
         "category.html",
         category_name=f'Search Results for "{q}"',
         expenses=expenses,
-        categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES,
         active_view="search"
     )
 
@@ -281,12 +302,13 @@ def yearly_view():
     monthly_incomes = []
     monthly_expenses = []
     
+    income_categories = db.get_categories(user_id, 'income')
     for m in range(1, 13):
         raw_expenses = db.get_expenses_by_month(user_id, year, m)
         m_inc = 0.0
         m_exp = 0.0
         for _, amount, category in raw_expenses:
-            if category in INCOME_CATEGORIES:
+            if category in income_categories:
                 m_inc += amount
             else:
                 m_exp += amount
@@ -302,10 +324,23 @@ def yearly_view():
         yearly_expenses=yearly_expenses,
         monthly_incomes=monthly_incomes,
         monthly_expenses=monthly_expenses,
-        categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES,
         active_view="yearly"
     )
+
+@app.route("/api/calculator/save", methods=["POST"])
+def save_calculator():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    data = request.json
+    calc_type = data.get("type")
+    config_data = data.get("data")
+    
+    if not calc_type or not config_data:
+        return jsonify({"success": False, "message": "Missing fields"}), 400
+        
+    db.save_calculator_state(session["user_id"], calc_type, json.dumps(config_data))
+    return jsonify({"success": True})
 
 @app.route("/calculator")
 def calculator_view():
@@ -313,14 +348,74 @@ def calculator_view():
         return redirect(url_for("login"))
         
     calc_type = request.args.get("type", "standard")
+    saved_state = db.get_calculator_state(session["user_id"], calc_type) or 'null'
         
     return render_template(
         "calculator.html",
-        categories=CATEGORIES,
-        income_categories=INCOME_CATEGORIES,
         active_view=f"calculator_{calc_type}",
-        calc_type=calc_type
+        calc_type=calc_type,
+        saved_state=saved_state
     )
 
+@app.route("/settings")
+def settings_view():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user_id = session["user_id"]
+    return render_template("settings.html", active_view="settings")
+
+@app.route("/api/settings/currency", methods=["POST"])
+def update_currency():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    currency = request.json.get("currency_symbol", "₹")
+    currency = currency[:3] # Limit to 3 chars
+    db.update_settings(session["user_id"], currency)
+    return jsonify({"success": True})
+
+@app.route("/api/categories", methods=["POST"])
+def add_custom_category():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    name = request.json.get("name", "").strip()
+    cat_type = request.json.get("type", "expense")
+    if not name or cat_type not in ["expense", "income"]:
+        return jsonify({"success": False, "message": "Invalid parameters"}), 400
+        
+    db.add_category(session["user_id"], name, cat_type)
+    return jsonify({"success": True})
+
+@app.route("/api/categories/<cat_type>/<name>", methods=["DELETE"])
+def delete_custom_category(cat_type, name):
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+        
+    db.delete_category(session["user_id"], name, cat_type)
+    return jsonify({"success": True})
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    import threading
+    import socket
+    import traceback
+
+    port = 5000
+    # Check if port 5000 is occupied (by a previous crashed/zombie process)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if sock.connect_ex(('127.0.0.1', port)) == 0:
+        port = 5005
+    sock.close()
+
+    def open_browser():
+        if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+            # Automatically launches Microsoft Edge with the correct port
+            os.system(f'start msedge "http://127.0.0.1:{port}/"')
+            
+    threading.Timer(1.5, open_browser).start()
+    
+    try:
+        app.run(debug=True, host="0.0.0.0", port=port)
+    except Exception as e:
+        with open("crash.log", "w") as f:
+            f.write("The application crashed while starting. Error:\n\n")
+            traceback.print_exc(file=f)
+        os.system("start notepad crash.log")
