@@ -5,115 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Calendar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="dashboard-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>❖ BUDGET</h2>
-            </div>
-            
-            <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">Home</span>
-            </a>
-            
-            <!-- Expenses Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('expenses-sub')">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text">Expenses</span>
-                <span class="chev" id="expenses-chev">›</span>
-            </div>
-            <div class="sub-nav" id="expenses-sub">
-                {% for cat in categories %}
-                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
-                    <span class="nav-text">{{ cat }}</span>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <nav class="navbar">
+            <div class="flex items-center gap-4">
+                <a href="/" class="nav-brand">
+                    <span>❖</span> BUDGET
                 </a>
-                {% endfor %}
+                
+                <div class="nav-links" style="margin-left: 24px;">
+                    <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">Home</a>
+                    
+                    <div class="dropdown">
+                        <div class="nav-item {% if active_view in categories %}active{% endif %}" style="cursor: pointer;">
+                            Expenses <span>▾</span>
+                        </div>
+                        <div class="dropdown-content">
+                            {% for cat in categories %}
+                            <a href="/category/{{ cat|urlencode }}">{{ cat }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <div class="nav-item {% if active_view in income_categories %}active{% endif %}" style="cursor: pointer;">
+                            Income <span>▾</span>
+                        </div>
+                        <div class="dropdown-content">
+                            {% for cat in income_categories %}
+                            <a href="/category/{{ cat|urlencode }}">{{ cat }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">Yearly Report</a>
+                    
+                    <div class="dropdown">
+                        <div class="nav-item {% if active_view and active_view.startswith('calculator_') %}active{% endif %}" style="cursor: pointer;">
+                            Calculators <span>▾</span>
+                        </div>
+                        <div class="dropdown-content">
+                            <a href="/calculator?type=standard">Budget Guide</a>
+                            <a href="/calculator?type=budget">50/30/20 Budget</a>
+                            <a href="/calculator?type=envelope">Envelope Budget</a>
+                            <a href="/calculator?type=zerobased">Zero-Based Budget</a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Income Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('income-sub')">
-                <span class="nav-icon">📥</span>
-                <span class="nav-text">Income</span>
-                <span class="chev" id="income-chev">›</span>
+            <div class="nav-actions">
+                <form action="/search" method="GET" class="search-box">
+                    <input type="text" name="q" placeholder="Search..." class="form-control" style="width: 180px; padding: 8px 12px; font-size: 14px; min-height: unset; height: 38px;" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; height: 38px;">Search</button>
+                </form>
+                
+                <button type="button" class="btn-icon" id="theme-toggle" title="Toggle Dark Mode">
+                    🌙
+                </button>
+                
+                <button type="button" class="btn btn-secondary" onclick="openExportModal()" style="padding: 8px 16px; height: 38px; border-color: var(--success); color: var(--success);">
+                    Export PDF
+                </button>
+                
+                <a href="/settings" class="btn-icon {% if active_view == 'settings' %}active{% endif %}" title="Settings">⚙️</a>
+                
+                <a href="/logout" class="btn-icon" title="Sign Out" onclick="sessionStorage.removeItem('settingsTipShown');">🚪</a>
             </div>
-            <div class="sub-nav" id="income-sub">
-                {% for cat in income_categories %}
-                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
-                    <span class="nav-text">{{ cat }}</span>
-                </a>
-                {% endfor %}
-            </div>
-
-            <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">
-                <span class="nav-icon">📊</span>
-                <span class="nav-text">Yearly Report</span>
-            </a>
-
-            <!-- Calculator Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('calc-sub')">
-                <span class="nav-icon">🧮</span>
-                <span class="nav-text">Calculator</span>
-                <span class="chev" id="calc-chev">›</span>
-            </div>
-            <div class="sub-nav" id="calc-sub">
-                <a href="/calculator?type=standard" class="nav-sub-item {% if active_view == 'calculator_standard' %}active{% endif %}">
-                    <span class="nav-text">Budget Guide</span>
-                </a>
-                <a href="/calculator?type=budget" class="nav-sub-item {% if active_view == 'calculator_budget' %}active{% endif %}">
-                    <span class="nav-text">50/30/20 Budget</span>
-                </a>
-                <a href="/calculator?type=envelope" class="nav-sub-item {% if active_view == 'calculator_envelope' %}active{% endif %}">
-                    <span class="nav-text">Envelope Budget</span>
-                </a>
-                <a href="/calculator?type=zerobased" class="nav-sub-item {% if active_view == 'calculator_zerobased' %}active{% endif %}">
-                    <span class="nav-text">Zero-Based Budget</span>
-                </a>
-            </div>
-
-            <!-- Spacer -->
-            <div style="flex: 1;"></div>
-            
-            <a href="/api/export" class="nav-item" style="color: var(--success);">
-                <span class="nav-icon">📥</span>
-                <span class="nav-text">Export PDF</span>
-            </a>
-            <a href="/settings" class="nav-item {% if active_view == 'settings' %}active{% endif %}">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-text">Settings</span>
-            </a>
-            
-            <a href="/logout" class="nav-item" onclick="sessionStorage.removeItem('settingsTipShown');">
-                <span class="nav-icon">🚪</span>
-                <span class="nav-text">Sign Out</span>
-            </a>
-        </aside>
+        </nav>
 
         <!-- Main Workspace -->
         <main class="main-content">
-            <header class="topbar" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 40px; height: auto; background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 16px; margin: 20px 20px 0 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.25); box-sizing: border-box;">
-                <div style="display:flex; align-items:center; gap: 20px;">
-                    <button class="btn-icon mobile-only" onclick="toggleMobileSidebar()" style="font-size: 24px; padding: 0; background: transparent; border: none; color: white; cursor: pointer;">☰</button>
-                    <div class="topbar-title" style="font-size: 22px; font-weight: 700; color: white; white-space: nowrap; margin: 0;">{% block topbar_title %}{% endblock %}</div>
-                </div>
-                
-                <div class="topbar-search" style="flex: 1; display: flex; justify-content: flex-end; max-width: 450px; margin-left: 20px;">
-                    <form action="/search" method="GET" style="display:flex; align-items:center; width: 100%; gap: 15px;">
-                        <input id="search-input" type="text" name="q" placeholder="Search transactions..." style="flex: 1; background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:8px; color:white; padding:12px 18px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; min-width: 150px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                        <button type="submit" style="background:var(--brand-blue); border:none; color:white; padding:12px 24px; border-radius:8px; cursor:pointer; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 14px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);">Search</button>
-                    </form>
-                </div>
-            </header>
-            
             {% block content %}{% endblock %}
         </main>
     </div>
 
-    <!-- Modals if needed by child templates -->
+    <!-- Global Modals -->
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="export-modal-overlay" onclick="if(event.target === this) closeExportModal()">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">Export Options</h3>
+                <button type="button" class="modal-close" onclick="closeExportModal()">&times;</button>
+            </div>
+            <form id="export-form" onsubmit="handleExport(event)">
+                <div class="form-group">
+                    <label for="export-filename">File Name</label>
+                    <input type="text" id="export-filename" name="filename" class="form-control" value="budget_export" placeholder="e.g. budget_2023" required>
+                </div>
+                <div class="flex gap-4">
+                    <div class="form-group w-full">
+                        <label for="export-size">Page Size</label>
+                        <select id="export-size" name="size" class="form-control">
+                            <option value="A4">A4</option>
+                            <option value="Letter">Letter</option>
+                        </select>
+                    </div>
+                    <div class="form-group w-full">
+                        <label for="export-orientation">Orientation</label>
+                        <select id="export-orientation" name="orientation" class="form-control">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group checkbox-group mb-6 mt-4">
+                    <input type="checkbox" id="export-margins" name="margins" checked>
+                    <label for="export-margins" style="margin: 0; font-weight: 500;">Include default margins</label>
+                </div>
+                <div class="form-group checkbox-group mb-6">
+                    <input type="checkbox" id="export-hf" name="header_footer">
+                    <label for="export-hf" style="margin: 0; font-weight: 500;">Include Header / Footer</label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Download PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% block modals %}{% endblock %}
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>

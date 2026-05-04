@@ -9,12 +9,14 @@
     </script>
 {% endblock %}
 
-{% block topbar_title %}{{ month_name }} {{ year }}{% endblock %}
-
 {% block content %}
-<div id="settings-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background: var(--panel-dark); border: 2px solid var(--success); color: var(--text-light); padding: 15px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); flex-direction: column; gap: 8px; font-size: 13px; z-index: 1000; max-width: 240px;">
+<div class="content-header">
+    <h1 class="page-title">{{ month_name }} {{ year }}</h1>
+</div>
+
+<div id="settings-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background: var(--bg-surface); border: 2px solid var(--success); color: var(--text-main); padding: 15px; border-radius: 8px; box-shadow: var(--shadow-lg); flex-direction: column; gap: 8px; font-size: 13px; z-index: 1000; max-width: 240px;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <strong style="color: white; font-size: 14px;">✨ Quick Tip</strong>
+        <strong style="color: var(--text-main); font-size: 14px;">✨ Quick Tip</strong>
         <span onclick="this.parentElement.parentElement.style.display='none'" style="color: var(--text-muted); cursor: pointer; font-size: 16px;">&times;</span>
     </div>
     <span style="color: var(--text-muted); line-height: 1.4;">Head to settings to personalize your currency symbol and categories!</span>
@@ -30,122 +32,135 @@
     });
 </script>
 
-<div class="dashboard-panes">
+<div class="dashboard-grid">
     <!-- Calendar -->
-    <div class="calendar-panel">
-        <div class="cal-header">
-            <button class="btn-icon" onclick="changeMonth(-1)">&lt;</button>
-            <div class="cal-title">{{ month_name }} {{ year }}</div>
-            <button class="btn-icon" onclick="changeMonth(1)">&gt;</button>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{ month_name }} {{ year }}</h2>
+            <div class="flex gap-2">
+                <button class="btn-icon" onclick="changeMonth(-1)">&lt;</button>
+                <button class="btn-icon" onclick="changeMonth(1)">&gt;</button>
+            </div>
         </div>
-        <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+        <div id="calendar-grid" class="calendar-grid">
             <!-- JS injects days here -->
         </div>
     </div>
 
     <!-- Summary Sidebar -->
-    <div class="summary-panel">
-        <div class="summary-header">
-            <div class="summary-title">Monthly Summary</div>
+    <div class="card flex-col">
+        <div class="card-header" style="margin-bottom: 16px;">
+            <h2 class="card-title">Monthly Summary</h2>
         </div>
-        <div class="divider"></div>
-        <div class="stats-grid">
-            <div class="stat-row">
-                <div class="stat-label">Total Income</div>
-                <div class="stat-val text-success">{{ currency }}{{ "%.2f"|format(total_income) }}</div>
+        
+        <div class="stats-grid mb-6">
+            <div class="stat-item">
+                <span class="stat-label">Income</span>
+                <span class="stat-value text-success">{{ currency }}{{ "%.2f"|format(total_income) }}</span>
             </div>
-            <div class="stat-row">
-                <div class="stat-label">Total Expenses</div>
-                <div class="stat-val text-danger">{{ currency }}{{ "%.2f"|format(total_expenses) }}</div>
+            <div class="stat-item">
+                <span class="stat-label">Expenses</span>
+                <span class="stat-value text-danger">{{ currency }}{{ "%.2f"|format(total_expenses) }}</span>
             </div>
-            <div class="stat-row">
-                <div class="stat-label">Cash short/extra</div>
-                <div class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
+            <div class="stat-item">
+                <span class="stat-label">Net</span>
+                <span class="stat-value {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
                     {{ currency }}{{ "%.2f"|format(cash_diff) }}
-                </div>
+                </span>
             </div>
         </div>
         
-        <div class="divider"></div>
-        <div style="padding: 10px 30px; font-weight: bold; color: var(--brand-blue);">Daily Transactions ({{ selected_date }})</div>
+        <div class="flex justify-between items-center mt-4 mb-4" style="border-top: 1px solid var(--border-color); padding-top: 24px;">
+            <h3 class="card-title" style="font-size: 16px;">Daily Transactions ({{ selected_date }})</h3>
+            <button class="btn btn-primary" onclick="openAddModal()" style="padding: 6px 12px; font-size: 13px;">+ Add</button>
+        </div>
         
-        <div class="transactions">
+        <div class="transaction-list">
             {% if daily_expenses %}
                 {% for e in daily_expenses %}
-                <div class="transaction-card">
-                    <div class="tx-top">
+                <div class="transaction-item">
+                    <div class="tx-details">
                         <div class="tx-name">{{ e[3] }}</div>
-                        <div class="tx-amount">{{ currency }}{{ "%.2f"|format(e[1]) }}</div>
-                    </div>
-                    <div class="tx-bot">
-                        <div>{{ e[2].upper() }}</div>
-                        <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="tx-meta">
+                            <span>{{ e[2].upper() }}</span>
                             {% if e[4] %}
-                            <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
+                            <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-primary); text-decoration:none;">🧾 Receipt</a>
                             {% endif %}
-                            <button class="btn-text" style="color:var(--brand-blue)" onclick='openEditModal({{ e[0] }}, {{ selected_date|tojson }}, {{ e[1] }}, {{ e[2]|tojson }}, {{ e[3]|tojson }}, {{ e[5]|default(0)|tojson }})'>Edit</button>
-                            <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="tx-amount text-danger" style="margin-right: 12px;">{{ currency }}{{ "%.2f"|format(e[1]) }}</div>
+                        <div class="flex gap-2">
+                            <button class="btn-icon" style="width: 32px; height: 32px; font-size: 14px;" title="Edit" onclick='openEditModal({{ e[0] }}, {{ selected_date|tojson }}, {{ e[1] }}, {{ e[2]|tojson }}, {{ e[3]|tojson }}, {{ e[5]|default(0)|tojson }})'>✏️</button>
+                            <button class="btn-icon text-danger" style="width: 32px; height: 32px; font-size: 14px;" title="Delete" onclick="deleteExpense({{ e[0] }})">🗑️</button>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 14px;">No expenses for this date.</div>
+                <div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 14px; padding: 20px 0;">No transactions for this date.</div>
             {% endif %}
         </div>
-
-        <button class="add-btn" onclick="openAddModal()">+ Add {{ "Expense" if cash_diff >= 0 else "Transaction" }}</button>
     </div>
 </div>
 {% endblock %}
 
 {% block modals %}
-<!-- Add Slide Panel -->
-<div class="side-panel-overlay" id="add-modal-overlay">
-    <div class="side-panel" id="add-modal-panel">
-        <div class="side-panel-header">
-            <h3 id="modal-title">Add Transaction</h3>
-            <button class="close-btn" onclick="closeAddModal()">&times;</button>
+<!-- Add Transaction Modal -->
+<div class="modal-overlay" id="add-modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-title">Add Transaction</h3>
+            <button type="button" class="modal-close" onclick="closeAddModal()">&times;</button>
         </div>
+        
         <input type="hidden" id="edit-expense-id" value="">
-        <div class="input-group">
+        
+        <div class="form-group">
             <label for="expense-date">Date</label>
-            <input type="text" id="expense-date" value="{{ selected_date }}" readonly>
+            <input type="text" id="expense-date" class="form-control" value="{{ selected_date }}" readonly style="background-color: var(--bg-body);">
         </div>
-        <div class="input-group">
-            <label for="expense-amount">Amount ({{ currency }})</label>
-            <input type="number" step="0.01" id="expense-amount" placeholder="0.00">
+        
+        <div class="flex gap-4">
+            <div class="form-group w-full">
+                <label for="expense-amount">Amount ({{ currency }})</label>
+                <input type="number" step="0.01" id="expense-amount" class="form-control" placeholder="0.00">
+            </div>
+            <div class="form-group w-full">
+                <label for="expense-category">Category</label>
+                <select id="expense-category" class="form-control">
+                    <optgroup label="Expenses">
+                        {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Income">
+                        {% for cat in income_categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
         </div>
-        <div class="input-group">
-            <label for="expense-category">Category</label>
-            <select id="expense-category">
-                <optgroup label="Expenses">
-                    {% for cat in categories %}
-                        <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
-                </optgroup>
-                <optgroup label="Income">
-                    {% for cat in income_categories %}
-                        <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
-                </optgroup>
-            </select>
+        
+        <div class="form-group">
+            <label for="expense-name">Description</label>
+            <input type="text" id="expense-name" class="form-control" placeholder="e.g. Netflix Subscription">
         </div>
-        <div class="input-group">
-            <label for="expense-name">Name / Description</label>
-            <input type="text" id="expense-name" placeholder="e.g. Netflix Subscription">
-        </div>
-        <div class="input-group" style="display:flex; align-items:center; flex-direction:row; gap:12px;">
+        
+        <div class="form-group checkbox-group mb-6 mt-4">
             <input type="checkbox" id="expense-recurring">
-            <label for="expense-recurring" style="margin: 0; font-size: 15px; color: var(--text-light); font-weight: 500;">Repeat Monthly</label>
+            <label for="expense-recurring" style="margin: 0; font-weight: 500;">Repeat Monthly</label>
         </div>
-        <div class="input-group">
+        
+        <div class="form-group mb-6">
             <label for="expense-receipt">Receipt Image (Optional)</label>
-            <input type="file" id="expense-receipt" accept="image/*">
+            <input type="file" id="expense-receipt" class="form-control" accept="image/*" style="padding: 9px 16px;">
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 40px;">
-            <button class="btn-outline" style="flex:1;" onclick="closeAddModal()">Cancel</button>
-            <button class="btn-primary" style="flex:2; margin-top: 0;" onclick="saveExpense()">Save Transaction</button>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveExpense()">Save Transaction</button>
         </div>
     </div>
 </div>

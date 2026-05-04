@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // --- THEME INITIALIZATION ---
+    initTheme();
+
     // --- LOGIN PAGE LOGIC ---
     const authForm = document.getElementById("auth-form");
     if (authForm) {
@@ -40,12 +43,13 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 errorMsg.style.display = "block";
                 errorMsg.style.color = "var(--danger)";
+                errorMsg.style.borderLeftColor = "var(--danger)";
                 errorMsg.innerText = data.message;
             }
         });
     }
 
-    // --- DASHBOARD LOGIC ---
+    // --- DASHBOARD CALENDAR LOGIC ---
     const calGrid = document.getElementById("calendar-grid");
     if (calGrid && window.CURRENT_YEAR) {
         // Draw basic days grid
@@ -90,27 +94,66 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }
     }
-    // Allow closing modals safely by clicking outside
+
+    // Handle clicks outside of modals to close them
     document.addEventListener('click', (e) => {
-        if (e.target && e.target.classList && e.target.classList.contains('side-panel-overlay')) {
+        if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
             e.target.classList.remove('active');
-            const panel = e.target.querySelector('.side-panel');
-            if (panel) panel.classList.remove('active');
         }
     });
 
-    // Support ESC key to safely exit overlays and sidemenu
+    // Support ESC key to safely exit overlays
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.side-panel-overlay.active, .side-panel.active, .sidebar.active').forEach(el => {
+            document.querySelectorAll('.modal-overlay.active').forEach(el => {
                 el.classList.remove('active');
             });
         }
     });
-
-
+    
+    // Theme toggle button
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
 });
 
+// --- THEME LOGIC ---
+function initTheme() {
+    const savedTheme = localStorage.getItem('budget-theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        updateThemeIcon(true);
+    } else if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+        updateThemeIcon(false);
+    } else {
+        // Default to light, or system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        /* Defaulting to light as planned, but we can respect OS preference if we want:
+        if (prefersDark) {
+            document.body.classList.add('dark-mode');
+            updateThemeIcon(true);
+        } */
+        updateThemeIcon(false);
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('budget-theme', isDark ? 'dark' : 'light');
+    updateThemeIcon(isDark);
+}
+
+function updateThemeIcon(isDark) {
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+        btn.innerText = isDark ? '☀️' : '🌙';
+    }
+}
+
+
+// --- CALENDAR NAV ---
 function changeMonth(delta) {
     let y = window.CURRENT_YEAR;
     let m = window.CURRENT_MONTH + delta;
@@ -119,10 +162,14 @@ function changeMonth(delta) {
     window.location.href = `/?year=${y}&month=${m}`;
 }
 
+// --- ADD/EDIT MODAL LOGIC ---
 function openAddModal() {
     const editIdEl = document.getElementById('edit-expense-id');
     if (editIdEl) editIdEl.value = '';
-    document.getElementById('expense-date').value = window.SELECTED_DATE || new Date().toISOString().split('T')[0];
+    
+    const dateEl = document.getElementById('expense-date');
+    if (dateEl) dateEl.value = window.SELECTED_DATE || new Date().toISOString().split('T')[0];
+    
     document.getElementById('expense-amount').value = '';
     document.getElementById('expense-name').value = '';
     
@@ -133,7 +180,6 @@ function openAddModal() {
     if (recEl) recEl.checked = false;
     
     document.getElementById('add-modal-overlay').classList.add('active');
-    document.getElementById('add-modal-panel').classList.add('active');
 }
 
 function openEditModal(id, date, amount, category, name, is_recurring = 0) {
@@ -148,14 +194,10 @@ function openEditModal(id, date, amount, category, name, is_recurring = 0) {
     
     document.getElementById('modal-title').innerText = "Edit Transaction";
     document.getElementById('add-modal-overlay').classList.add('active');
-    document.getElementById('add-modal-panel').classList.add('active');
 }
 
 function closeAddModal() {
-    document.getElementById('add-modal-panel').classList.remove('active');
-    setTimeout(() => {
-        document.getElementById('add-modal-overlay').classList.remove('active');
-    }, 300); // Wait for slide animation
+    document.getElementById('add-modal-overlay').classList.remove('active');
 }
 
 async function saveExpense() {
@@ -207,22 +249,36 @@ async function deleteExpense(id) {
     }
 }
 
-function toggleSidebar(id) {
-    const el = document.getElementById(id);
-    const chev = document.getElementById(id.replace('-sub', '-chev'));
-    if (el.style.display === 'block') {
-        el.style.display = 'none';
-        if (chev) chev.innerText = '›';
-    } else {
-        el.style.display = 'block';
-        if (chev) chev.innerText = '˅';
-    }
+// --- EXPORT MODAL LOGIC ---
+function openExportModal() {
+    document.getElementById('export-modal-overlay').classList.add('active');
 }
 
-function toggleMobileSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('active');
-    }
+function closeExportModal() {
+    document.getElementById('export-modal-overlay').classList.remove('active');
 }
 
+function handleExport(e) {
+    e.preventDefault();
+    const filename = document.getElementById('export-filename').value || 'budget_export';
+    const size = document.getElementById('export-size').value;
+    const orientation = document.getElementById('export-orientation').value;
+    const margins = document.getElementById('export-margins').checked;
+    const headerFooter = document.getElementById('export-hf').checked;
+    
+    // Construct query parameters
+    const params = new URLSearchParams({
+        filename: filename,
+        size: size,
+        orientation: orientation,
+        margins: margins,
+        header_footer: headerFooter
+    });
+    
+    // Redirect to the export endpoint with parameters.
+    // Note: If the backend /api/export doesn't natively support these parameters, it will simply ignore them,
+    // preserving the existing functionality while being ready for future backend enhancements.
+    window.location.href = `/api/export?${params.toString()}`;
+    
+    closeExportModal();
+}

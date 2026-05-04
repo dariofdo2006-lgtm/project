@@ -5,30 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Calendar - Sign In</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
-    <div class="login-container">
-        <h1 id="form-title">Sign In</h1>
-        <div id="error-msg" class="error-msg" style="display: none;"></div>
+    <div class="card login-card">
+        <h1 class="login-title" id="form-title">Sign In</h1>
+        <div id="error-msg" class="error-msg"></div>
         
         <form id="auth-form">
-            <div class="input-group">
+            <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="✉  Enter Username" required>
+                <input type="text" id="username" class="form-control" placeholder="Enter Username" required>
             </div>
             
-            <div class="input-group">
+            <div class="form-group mb-6">
                 <label for="password" id="pass-label">Password</label>
-                <input type="password" id="password" placeholder="🔒  Enter Password" required>
+                <input type="password" id="password" class="form-control" placeholder="Enter Password" required>
             </div>
             
-            <button type="submit" id="submit-btn" class="btn-primary">SIGN IN</button>
+            <button type="submit" id="submit-btn" class="btn btn-primary w-full" style="height: 48px; font-size: 16px;">SIGN IN</button>
         </form>
         
-        <div class="switch-mode">
-            <span id="switch-lbl">Don't have an account?</span>
-            <button type="button" class="btn-text" id="switch-btn">Sign up</button>
+        <div class="flex items-center justify-center gap-2 mt-6" style="padding-top: 24px; border-top: 1px solid var(--border-color);">
+            <span id="switch-lbl" style="color: var(--text-muted); font-size: 14px;">Don't have an account?</span>
+            <button type="button" class="btn-secondary" id="switch-btn" style="border: none; background: transparent; color: var(--brand-primary); font-weight: 600; cursor: pointer;">Sign up</button>
         </div>
     </div>
 

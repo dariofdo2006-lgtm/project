@@ -26,12 +26,10 @@ def process_recurring_expenses(user_id):
     prev_month, prev_year = (12, cur_year - 1) if cur_month == 1 else (cur_month - 1, cur_year)
         
     prev_month_str = f"{prev_year:04d}-{prev_month:02d}"
-    db.execute("SELECT amount, category, name, image_path, date FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{prev_month_str}%"))
-    prev_expenses = db.cursor.fetchall()
+    prev_expenses = db.get_recurring_expenses(user_id, prev_month_str)
     
     cur_month_str = f"{cur_year:04d}-{cur_month:02d}"
-    db.execute("SELECT count(*) FROM expenses WHERE user_id = ? AND is_recurring = 1 AND date LIKE ?", (user_id, f"{cur_month_str}%"))
-    count = db.cursor.fetchone()[0]
+    count = db.count_recurring_expenses(user_id, cur_month_str)
     
     if count == 0 and prev_expenses:
         for exp in prev_expenses:
@@ -171,7 +169,7 @@ def upload_receipt(expense_id):
     encoded_string = base64.b64encode(file.read()).decode('utf-8')
     data_uri = f"data:{file.mimetype};base64,{encoded_string}"
     
-    db.execute("UPDATE expenses SET image_path = ? WHERE id = ? AND user_id = ?", (data_uri, expense_id, session["user_id"]))
+    db.update_expense_receipt(expense_id, session["user_id"], data_uri)
     
     return jsonify({"success": True})
 
@@ -237,8 +235,7 @@ def export_pdf():
         return redirect(url_for("login"))
         
     user_id = session["user_id"]
-    db.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
-    rows = db.cursor.fetchall()
+    rows = db.get_all_expenses_for_export(user_id)
     
     pdf = FPDF()
     pdf.add_page()
@@ -271,15 +268,7 @@ def search_view():
     user_id = session["user_id"]
     q = request.args.get("q", "")
     
-    search_pattern = f"%{q}%"
-    db.execute("""
-        SELECT id, date, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring 
-        FROM expenses 
-        WHERE user_id = ? AND (name LIKE ? OR category LIKE ?) 
-        ORDER BY date DESC
-    """, (user_id, search_pattern, search_pattern))
-    
-    expenses = db.cursor.fetchall()
+    expenses = db.search_expenses(user_id, q)
     
     return render_template(
         "category.html",
