@@ -141,14 +141,17 @@ def add_expense():
     user_id = session["user_id"]
     date = data.get("date")
     try:
-        amount = float(data.get("amount") or 0)
+        amount_raw = data.get("amount")
+        if amount_raw is None or amount_raw == "":
+            return jsonify({"success": False, "message": "Amount is required"}), 400
+        amount = float(amount_raw)
     except (ValueError, TypeError):
         return jsonify({"success": False, "message": "Invalid amount"}), 400
     category = data.get("category")
     name = data.get("name")
     is_recurring = data.get("is_recurring", False)
     
-    if not (date and amount and category and name):
+    if not date or not category or not name:
         return jsonify({"success": False, "message": "All fields required"}), 400
         
     expense_id = db.add_expense(user_id, date, amount, category, name, None, is_recurring)
@@ -201,14 +204,17 @@ def update_expense(expense_id):
     user_id = session["user_id"]
     date = data.get("date")
     try:
-        amount = float(data.get("amount") or 0)
+        amount_raw = data.get("amount")
+        if amount_raw is None or amount_raw == "":
+            return jsonify({"success": False, "message": "Amount is required"}), 400
+        amount = float(amount_raw)
     except (ValueError, TypeError):
         return jsonify({"success": False, "message": "Invalid amount"}), 400
     category = data.get("category")
     name = data.get("name")
     is_recurring = data.get("is_recurring", False)
     
-    if not (date and amount and category and name):
+    if not date or not category or not name:
         return jsonify({"success": False, "message": "All fields required"}), 400
         
     db.update_expense(expense_id, user_id, date, amount, category, name, is_recurring)

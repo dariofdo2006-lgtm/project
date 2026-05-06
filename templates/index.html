@@ -1,167 +1,203 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <script>
-        // Inject server variables into javascript
-        window.CURRENT_YEAR = {{ year }};
-        window.CURRENT_MONTH = {{ month }};
-        window.SELECTED_DATE = "{{ selected_date }}";
-    </script>
+<script>
+    window.expenseCats = {{ categories|tojson }};
+    window.incomeCats = {{ income_categories|tojson }};
+    window.CURRENT_YEAR = {{ year }};
+    window.CURRENT_MONTH = {{ month }};
+    window.SELECTED_DATE = "{{ selected_date }}";
+</script>
+<style>
+    /* Add calendar day hover/active styling to match original */
+    .calendar-day { cursor: pointer; transition: 0.2s; padding: 10px; border: 1px solid var(--border-dark); border-radius: 8px; min-height: 80px; display: flex; flex-direction: column; }
+    .calendar-day:hover { background: var(--border-dark); }
+    .calendar-day.selected { border-color: var(--brand-blue); background: rgba(59, 130, 246, 0.1); }
+    .calendar-day.today { border-bottom: 3px solid var(--brand-blue); }
+    .calendar-day.empty { background: transparent; border: none; cursor: default; }
+    .calendar-day.empty:hover { background: transparent; }
+</style>
 {% endblock %}
 
+{% block topbar_title %}Overview{% endblock %}
+
 {% block content %}
-<div class="content-header">
-    <h1 class="page-title">{{ month_name }} {{ year }}</h1>
-</div>
-
-<div id="settings-toast" style="display: none; position: fixed; bottom: 30px; right: 30px; background: var(--bg-surface); border: 2px solid var(--success); color: var(--text-main); padding: 15px; border-radius: 8px; box-shadow: var(--shadow-lg); flex-direction: column; gap: 8px; font-size: 13px; z-index: 1000; max-width: 240px;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <strong style="color: var(--text-main); font-size: 14px;">✨ Quick Tip</strong>
-        <span onclick="this.parentElement.parentElement.style.display='none'" style="color: var(--text-muted); cursor: pointer; font-size: 16px;">&times;</span>
-    </div>
-    <span style="color: var(--text-muted); line-height: 1.4;">Head to settings to personalize your currency symbol and categories!</span>
-    <a href="/settings" style="color: var(--success); font-weight: bold; text-decoration: none; margin-top: 4px;">Go to Settings &rarr;</a>
-</div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (!sessionStorage.getItem('settingsTipShown')) {
-            document.getElementById('settings-toast').style.display = 'flex';
-            sessionStorage.setItem('settingsTipShown', 'true');
-        }
-    });
-</script>
-
-<div class="dashboard-grid">
-    <!-- Calendar -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">{{ month_name }} {{ year }}</h2>
-            <div class="flex gap-2">
-                <button class="btn-icon" onclick="changeMonth(-1)">&lt;</button>
-                <button class="btn-icon" onclick="changeMonth(1)">&gt;</button>
+<div class="dashboard-panes">
+    <!-- Calendar Pane -->
+    <div class="calendar-panel">
+        <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h2 class="cal-title" style="margin:0; font-size: 24px;">{{ month_name }} {{ year }}</h2>
+            <div>
+                {% set prev_month = month - 1 if month > 1 else 12 %}
+                {% set prev_year = year if month > 1 else year - 1 %}
+                {% set next_month = month + 1 if month < 12 else 1 %}
+                {% set next_year = year if month < 12 else year + 1 %}
+                <a href="/?year={{ prev_year }}&month={{ prev_month }}" class="btn-outline" style="text-decoration:none; display:inline-block; padding:8px 16px; border:1px solid var(--border-dark); border-radius:6px; color:var(--text-light); margin-right:10px;">← Prev</a>
+                <a href="/?year={{ next_year }}&month={{ next_month }}" class="btn-outline" style="text-decoration:none; display:inline-block; padding:8px 16px; border:1px solid var(--border-dark); border-radius:6px; color:var(--text-light);">Next →</a>
             </div>
         </div>
-        <div id="calendar-grid" class="calendar-grid">
-            <!-- JS injects days here -->
+        
+        <div class="calendar-grid" id="calendar-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;">
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Mon</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Tue</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Wed</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Thu</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Fri</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Sat</div>
+            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Sun</div>
+            <!-- JS will inject days here -->
         </div>
     </div>
 
-    <!-- Summary Sidebar -->
-    <div class="card flex-col">
-        <div class="card-header" style="margin-bottom: 16px;">
-            <h2 class="card-title">Monthly Summary</h2>
+    <!-- Summary & Transactions Pane -->
+    <div class="summary-panel" style="background:var(--panel-dark); border:1px solid var(--border-dark); border-radius:12px; padding:30px;">
+        <div class="summary-header" style="margin-bottom:20px;">
+            <h3 class="summary-title" style="margin:0; font-size:18px; color:var(--brand-blue);">{{ month_name }} Summary</h3>
         </div>
         
-        <div class="stats-grid mb-6">
-            <div class="stat-item">
+        <div class="stats-grid" style="display:flex; flex-direction:column; gap:10px;">
+            <div class="stat-row" style="display:flex; justify-content:space-between;">
                 <span class="stat-label">Income</span>
-                <span class="stat-value text-success">{{ currency }}{{ "%.2f"|format(total_income) }}</span>
+                <span class="stat-val text-success" style="color:#10b981; font-weight:bold;">{{ currency }}{{ "%.2f"|format(total_income) }}</span>
             </div>
-            <div class="stat-item">
+            <div class="stat-row" style="display:flex; justify-content:space-between;">
                 <span class="stat-label">Expenses</span>
-                <span class="stat-value text-danger">{{ currency }}{{ "%.2f"|format(total_expenses) }}</span>
+                <span class="stat-val text-danger" style="color:#ef4444; font-weight:bold;">{{ currency }}{{ "%.2f"|format(total_expenses) }}</span>
             </div>
-            <div class="stat-item">
+            <div class="stat-row" style="display:flex; justify-content:space-between; margin-top: 5px; padding-top: 10px; border-top: 1px dashed var(--border-focus);">
                 <span class="stat-label">Net</span>
-                <span class="stat-value {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    {{ currency }}{{ "%.2f"|format(cash_diff) }}
-                </span>
+                <span class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}" style="font-weight:bold; color:{% if cash_diff >= 0 %}#10b981{% else %}#ef4444{% endif %};">{{ currency }}{{ "%.2f"|format(cash_diff) }}</span>
             </div>
         </div>
         
-        <div class="flex justify-between items-center mt-4 mb-4" style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-            <h3 class="card-title" style="font-size: 16px;">Daily Transactions ({{ selected_date }})</h3>
-            <button class="btn btn-primary" onclick="openAddModal()" style="padding: 6px 12px; font-size: 13px;">+ Add</button>
-        </div>
+        <div class="divider" style="height:1px; background:var(--border-dark); margin:30px 0;"></div>
         
-        <div class="transaction-list">
-            {% if daily_expenses %}
-                {% for e in daily_expenses %}
-                <div class="transaction-item">
-                    <div class="tx-details">
-                        <div class="tx-name">{{ e[3] }}</div>
-                        <div class="tx-meta">
-                            <span>{{ e[2].upper() }}</span>
-                            {% if e[4] %}
-                            <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-primary); text-decoration:none;">🧾 Receipt</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="tx-amount text-danger" style="margin-right: 12px;">{{ currency }}{{ "%.2f"|format(e[1]) }}</div>
-                        <div class="flex gap-2">
-                            <button class="btn-icon" style="width: 32px; height: 32px; font-size: 14px;" title="Edit" onclick='openEditModal({{ e[0] }}, {{ selected_date|tojson }}, {{ e[1] }}, {{ e[2]|tojson }}, {{ e[3]|tojson }}, {{ e[5]|default(0)|tojson }})'>✏️</button>
-                            <button class="btn-icon text-danger" style="width: 32px; height: 32px; font-size: 14px;" title="Delete" onclick="deleteExpense({{ e[0] }})">🗑️</button>
-                        </div>
+        <h3 style="margin-top:0; margin-bottom:20px; font-size:16px;">Transactions for {{ selected_date }}</h3>
+        <div class="transactions" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto; padding-right:10px;">
+            {% for e in daily_expenses %}
+            <div class="transaction-card" style="background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:8px; padding:15px;">
+                <div class="tx-top" style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span class="tx-name" style="font-weight:600;">{{ e[4] }}</span>
+                    <span class="tx-amount {% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}" style="font-weight:bold; color:{% if e[3] in income_categories %}#10b981{% else %}#ef4444{% endif %};">
+                        {% if e[3] in income_categories %}+{% else %}-{% endif %}{{ currency }}{{ "%.2f"|format(e[2]) }}
+                    </span>
+                </div>
+                <div class="tx-bot" style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:13px;">
+                    <span>{{ e[3]|title }}</span>
+                    <div style="display:flex; gap:10px;">
+                        {% if e[5] %}
+                        <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none;">Receipt</a>
+                        {% endif %}
+                        <span style="cursor:pointer; color:var(--text-muted);" onclick="openEditModal({{ e[0] }}, '{{ selected_date }}', {{ e[2] }}, '{{ e[3] }}', '{{ e[4] }}', '{{ e[6]|default(0) }}')">Edit</span>
                     </div>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div style="color: var(--text-muted); text-align: center; margin-top: 20px; font-size: 14px; padding: 20px 0;">No transactions for this date.</div>
+            </div>
+            {% endfor %}
+            {% if not daily_expenses %}
+            <div style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:20px;">No transactions for this day.</div>
             {% endif %}
         </div>
+        
+        <button class="btn-primary" onclick="openModal('{{ selected_date }}')" style="margin-top: 20px;">+ Add Transaction</button>
     </div>
 </div>
 {% endblock %}
 
 {% block modals %}
-<!-- Add Transaction Modal -->
-<div class="modal-overlay" id="add-modal-overlay">
-    <div class="modal-container">
-        <div class="modal-header">
-            <h3 class="modal-title" id="modal-title">Add Transaction</h3>
-            <button type="button" class="modal-close" onclick="closeAddModal()">&times;</button>
-        </div>
-        
-        <input type="hidden" id="edit-expense-id" value="">
-        
-        <div class="form-group">
-            <label for="expense-date">Date</label>
-            <input type="text" id="expense-date" class="form-control" value="{{ selected_date }}" readonly style="background-color: var(--bg-body);">
-        </div>
-        
-        <div class="flex gap-4">
-            <div class="form-group w-full">
-                <label for="expense-amount">Amount ({{ currency }})</label>
-                <input type="number" step="0.01" id="expense-amount" class="form-control" placeholder="0.00">
-            </div>
-            <div class="form-group w-full">
-                <label for="expense-category">Category</label>
-                <select id="expense-category" class="form-control">
-                    <optgroup label="Expenses">
-                        {% for cat in categories %}
-                            <option value="{{ cat }}">{{ cat }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    <optgroup label="Income">
-                        {% for cat in income_categories %}
-                            <option value="{{ cat }}">{{ cat }}</option>
-                        {% endfor %}
-                    </optgroup>
-                </select>
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="expense-name">Description</label>
-            <input type="text" id="expense-name" class="form-control" placeholder="e.g. Netflix Subscription">
-        </div>
-        
-        <div class="form-group checkbox-group mb-6 mt-4">
-            <input type="checkbox" id="expense-recurring">
-            <label for="expense-recurring" style="margin: 0; font-weight: 500;">Repeat Monthly</label>
-        </div>
-        
-        <div class="form-group mb-6">
-            <label for="expense-receipt">Receipt Image (Optional)</label>
-            <input type="file" id="expense-receipt" class="form-control" accept="image/*" style="padding: 9px 16px;">
-        </div>
-        
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="saveExpense()">Save Transaction</button>
-        </div>
+<!-- Transaction Side Panel -->
+<div class="side-panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<div class="side-panel" id="side-panel">
+    <div class="side-panel-header">
+        <h3 id="modal-title">Add Transaction</h3>
+        <button class="close-btn" onclick="closePanel()">&times;</button>
     </div>
+    
+    <form id="tx-form" onsubmit="saveTransaction(event)">
+        <input type="hidden" id="tx-id" name="id">
+        
+        <div class="input-group">
+            <label>Date</label>
+            <input type="date" id="tx-date" name="date" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Type</label>
+            <select id="tx-type" name="type" onchange="updateCatDropdown()">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label>Category</label>
+            <select id="tx-category" name="category" required></select>
+        </div>
+        
+        <div class="input-group">
+            <label>Amount ({{ currency }})</label>
+            <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Description / Name</label>
+            <input type="text" id="tx-name" name="name" required>
+        </div>
+        
+        <div class="input-group">
+            <label>Receipt Image (Optional)</label>
+            <input type="file" id="receipt-input" name="receipt" accept="image/*">
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:30px;">
+            <button type="button" class="btn-primary" id="del-btn" style="flex: 1; margin-top: 0; background:var(--danger); display:none;" onclick="deleteCurrentTransaction()">Delete</button>
+            <button type="submit" class="btn-primary" style="flex: 1; margin-top: 0;">Save Transaction</button>
+        </div>
+    </form>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
+    
+    const year = window.CURRENT_YEAR;
+    const month = window.CURRENT_MONTH;
+    const selectedDate = window.SELECTED_DATE;
+    
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    
+    let firstDayWeekday = firstDay.getDay() - 1;
+    if (firstDayWeekday < 0) firstDayWeekday = 6; // Make Monday 0
+    
+    const numDays = lastDay.getDate();
+    
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    // Add empty days
+    for (let i = 0; i < firstDayWeekday; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        grid.appendChild(div);
+    }
+    
+    // Add real days
+    for (let i = 1; i <= numDays; i++) {
+        const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        if (dateStr === selectedDate) div.classList.add('selected');
+        if (dateStr === todayStr) div.classList.add('today');
+        
+        div.onclick = () => {
+            window.location.href = `/?year=${year}&month=${month}&date=${dateStr}`;
+        };
+        
+        let textColor = (dateStr === todayStr) ? 'white' : 'var(--text-light)';
+        div.innerHTML = `<div class="calendar-day-num" style="font-weight:600; color:${textColor};">${i}</div>`;
+        grid.appendChild(div);
+    }
+});
+</script>
 {% endblock %}

@@ -210,9 +210,9 @@ class Database:
     def get_expenses_by_date(self, user_id, date):
         if self.is_mongo:
             expenses = self.db.expenses.find({"user_id": user_id, "date": date})
-            return [(e["id"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False)) for e in expenses]
+            return [(e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False)) for e in expenses]
 
-        query = "SELECT id, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring FROM expenses WHERE user_id = ? AND date = ?"
+        query = "SELECT id, date, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring FROM expenses WHERE user_id = ? AND date = ?"
         self.execute(query, (user_id, date))
         return self.cursor.fetchall()
 
