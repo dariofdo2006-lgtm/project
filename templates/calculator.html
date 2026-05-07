@@ -1,41 +1,39 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="content-header">
-    <h1 class="page-title">Calculators</h1>
-</div>
+{% block topbar_title %}Calculator{% endblock %}
 
-<div class="calculator-container" style="display: flex; flex-direction: column; align-items: stretch; gap: 40px; max-width: 900px; margin: 0 auto;">
+{% block content %}
+<div class="calculator-container" style="display: flex; flex-direction: column; align-items: stretch; gap: 40px; max-width: 900px; margin: 0 auto; padding: 40px 20px;">
     
     {% if calc_type == 'standard' %}
     <!-- Budget Overview Guide -->
-    <div class="budget-wrapper">
+    <div class="budget-wrapper" style="margin-top: 20px;">
         <h2 style="margin-bottom: 20px; font-weight: 700;">What is a Budget?</h2>
-        <div class="card">
-            <p style="color: var(--text-main); font-size: 16px; margin-bottom: 20px; line-height: 1.6;">
+        <div class="budget-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
+            <p style="color: var(--text-light); font-size: 16px; margin-bottom: 20px; line-height: 1.6;">
                 A budget is a customized financial plan for a defined period, typically a month or a year. It outlines your projected income and how you plan to spend or save it.
             </p>
             
-            <h3 style="color: var(--brand-primary); margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Why is it important?</h3>
+            <h3 style="color: var(--brand-blue); margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Why is it important?</h3>
             <ul style="color: var(--text-muted); font-size: 15px; margin-left: 20px; margin-bottom: 25px; line-height: 1.6;">
-                <li style="margin-bottom: 10px;"><strong style="color: var(--text-main);">Control & Awareness:</strong> Gives you full visibility into where your money goes.</li>
-                <li style="margin-bottom: 10px;"><strong style="color: var(--text-main);">Goal Achievement:</strong> Helps prioritize savings for emergencies, large purchases, or retirement.</li>
-                <li style="margin-bottom: 10px;"><strong style="color: var(--text-main);">Debt Management:</strong> Ensures you allocate enough funds to clear off debts systematically.</li>
-                <li><strong style="color: var(--text-main);">Financial Peace:</strong> Reduces anxiety by preventing overspending and living paycheck to paycheck.</li>
+                <li style="margin-bottom: 10px;"><strong>Control & Awareness:</strong> Gives you full visibility into where your money goes.</li>
+                <li style="margin-bottom: 10px;"><strong>Goal Achievement:</strong> Helps prioritize savings for emergencies, large purchases, or retirement.</li>
+                <li style="margin-bottom: 10px;"><strong>Debt Management:</strong> Ensures you allocate enough funds to clear off debts systematically.</li>
+                <li><strong>Financial Peace:</strong> Reduces anxiety by preventing overspending and living paycheck to paycheck.</li>
             </ul>
 
-            <h3 style="color: var(--brand-primary); margin-top: 30px; margin-bottom: 15px; font-size: 18px;">3 Popular Budgeting Methods</h3>
+            <h3 style="color: var(--brand-blue); margin-top: 30px; margin-bottom: 15px; font-size: 18px;">3 Popular Budgeting Methods</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <h4 style="color: var(--text-main); margin-bottom: 10px; font-size: 16px;">50/30/20 Budget</h4>
+                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
+                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">50/30/20 Budget</h4>
                     <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates 50% of your income strictly to Needs, 30% to Wants, and 20% to Savings or Debt repayment.</p>
                 </div>
-                <div style="background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <h4 style="color: var(--text-main); margin-bottom: 10px; font-size: 16px;">Envelope Budget</h4>
+                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
+                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Envelope Budget</h4>
                     <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates specific cash amounts into physical or digital categories (envelopes). Once empty, no more spending allowed!</p>
                 </div>
-                <div style="background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <h4 style="color: var(--text-main); margin-bottom: 10px; font-size: 16px;">Zero-Based Budget</h4>
+                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
+                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Zero-Based Budget</h4>
                     <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Ensures every single dollar of income is assigned a job (expense, saving, or investment) before taking home pay, leaving $0 unallocated.</p>
                 </div>
             </div>
@@ -45,86 +43,86 @@
 
     {% if calc_type == 'budget' %}
     <!-- 50/30/20 Budget Calc -->
-    <div class="budget-wrapper">
+    <div class="budget-wrapper" style="margin-top: 20px;">
         <h2 style="margin-bottom: 20px; font-weight: 700;">50/30/20 Budget Calculator</h2>
-        <div class="card">
+        <div class="budget-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
             
-            <h3 style="color: var(--brand-primary); margin-bottom: 20px; font-size: 18px;">Enter your income to get your 50/30/20 budget</h3>
+            <h3 style="color: var(--brand-blue); margin-bottom: 20px; font-size: 18px;">Enter your income to get your 50/30/20 budget</h3>
             
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="budget-freq" style="font-size: 14px; color: var(--text-main); font-weight: 500;">How often do you receive your income?</label>
-                    <select id="budget-freq" class="form-control" style="width: 160px;" onchange="updateTargets()">
+                    <label for="budget-freq" style="font-size: 14px; color: var(--text-muted);">How often do you receive your income?</label>
+                    <select id="budget-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateTargets()">
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Annually</option>
                         <option value="weekly">Weekly</option>
                     </select>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="budget-income" style="font-size: 14px; color: var(--text-main); font-weight: 500;">What is your after-tax income?</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-main);">{{ currency }}</span>
-                        <input type="number" id="budget-income" placeholder="0" style="background: transparent; color: var(--text-main); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateTargets()">
+                    <label for="budget-income" style="font-size: 14px; color: var(--text-muted);">What is your after-tax income?</label>
+                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
+                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
+                        <input type="number" id="budget-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateTargets()">
                     </div>
                 </div>
             </div>
 
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 30px 0;">
+            <hr style="border: none; border-top: 1px solid var(--border-dark); margin: 30px 0;">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="color: var(--brand-primary); font-size: 18px;">Personalize your monthly budget</h3>
+                <h3 style="color: var(--brand-blue); font-size: 18px;">Personalize your monthly budget</h3>
             </div>
 
             <div class="budget-columns" style="display: flex; flex-direction: row; gap: 40px; flex-wrap: wrap;">
                 <!-- Needs -->
                 <div class="budget-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: 600; font-size: 18px;">Needs</span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Needs</span>
                         <div style="text-align: right;">
-                            <span id="needs-target" style="color: var(--text-muted); font-size: 14px; font-weight: 500; display: block;">Target: {{ currency }}0 (50%)</span>
-                            <span id="needs-sum" style="color: var(--brand-primary); font-size: 15px; font-weight: 600; display: block;">Total: {{ currency }}0</span>
+                            <span id="needs-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: {{ currency }}0 (50%)</span>
+                            <span id="needs-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: {{ currency }}0</span>
                         </div>
                     </div>
                     <div id="needs-list" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- JS injected items -->
                     </div>
-                    <div onclick="addBudgetItem('needs-list', 'needs-val')" style="margin-top: 15px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
+                    <div onclick="addBudgetItem('needs-list', 'needs-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
 
                 <!-- Wants -->
                 <div class="budget-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: 600; font-size: 18px;">Wants</span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Wants</span>
                         <div style="text-align: right;">
-                            <span id="wants-target" style="color: var(--text-muted); font-size: 14px; font-weight: 500; display: block;">Target: {{ currency }}0 (30%)</span>
-                            <span id="wants-sum" style="color: var(--brand-primary); font-size: 15px; font-weight: 600; display: block;">Total: {{ currency }}0</span>
+                            <span id="wants-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: {{ currency }}0 (30%)</span>
+                            <span id="wants-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: {{ currency }}0</span>
                         </div>
                     </div>
                     <div id="wants-list" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- JS injected items -->
                     </div>
-                    <div onclick="addBudgetItem('wants-list', 'wants-val')" style="margin-top: 15px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
+                    <div onclick="addBudgetItem('wants-list', 'wants-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
 
                 <!-- Savings -->
                 <div class="budget-col" style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: 600; font-size: 18px;">Savings</span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Savings</span>
                         <div style="text-align: right;">
-                            <span id="savings-target" style="color: var(--text-muted); font-size: 14px; font-weight: 500; display: block;">Target: {{ currency }}0 (20%)</span>
-                            <span id="savings-sum" style="color: var(--brand-primary); font-size: 15px; font-weight: 600; display: block;">Total: {{ currency }}0</span>
+                            <span id="savings-target" style="color: var(--text-muted); font-size: 14px; font-weight: 600; display: block;">Target: {{ currency }}0 (20%)</span>
+                            <span id="savings-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Total: {{ currency }}0</span>
                         </div>
                     </div>
                     <div id="savings-list" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- JS injected items -->
                     </div>
-                    <div onclick="addBudgetItem('savings-list', 'savings-val')" style="margin-top: 15px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
+                    <div onclick="addBudgetItem('savings-list', 'savings-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add item</div>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px;">
-                <button class="btn btn-secondary" onclick="window.location.reload()">Reset</button>
-                <button class="btn btn-primary" onclick="saveConfig('budget')">Save Config</button>
+                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);" onclick="window.location.reload()">Reset</button>
+                <button style="border-radius: 20px; padding: 12px 30px; font-size: 14px; background: var(--brand-blue); color: white; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600;" onclick="saveConfig('budget')">Save Config</button>
             </div>
         </div>
     </div>
@@ -132,53 +130,53 @@
 
     {% if calc_type == 'envelope' %}
     <!-- Envelope Budget Calc -->
-    <div class="budget-wrapper">
+    <div class="budget-wrapper" style="margin-top: 20px;">
         <h2 style="margin-bottom: 20px; font-weight: 700;">Envelope Budget Calculator</h2>
-        <div class="card">
+        <div class="budget-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
             
-            <h3 style="color: var(--brand-primary); margin-bottom: 20px; font-size: 18px;">Enter your income to set up your zero-based budget</h3>
+            <h3 style="color: var(--brand-blue); margin-bottom: 20px; font-size: 18px;">Enter your income to set up your zero-based budget</h3>
             
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="env-freq" style="font-size: 14px; color: var(--text-main); font-weight: 500;">How often do you receive your income?</label>
-                    <select id="env-freq" class="form-control" style="width: 160px;" onchange="updateEnvelope()">
+                    <label for="env-freq" style="font-size: 14px; color: var(--text-muted);">How often do you receive your income?</label>
+                    <select id="env-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateEnvelope()">
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Annually</option>
                         <option value="weekly">Weekly</option>
                     </select>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="env-income" style="font-size: 14px; color: var(--text-main); font-weight: 500;">What is your take-home pay?</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-main);">{{ currency }}</span>
-                        <input type="number" id="env-income" placeholder="0" style="background: transparent; color: var(--text-main); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateEnvelope()">
+                    <label for="env-income" style="font-size: 14px; color: var(--text-muted);">What is your take-home pay?</label>
+                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
+                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
+                        <input type="number" id="env-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateEnvelope()">
                     </div>
                 </div>
             </div>
 
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 30px 0;">
+            <hr style="border: none; border-top: 1px solid var(--border-dark); margin: 30px 0;">
 
-            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; background: var(--input-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; background: var(--bg-dark); padding: 20px; border-radius: 12px; border: 1px solid var(--border-dark);">
                 <h3 style="color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Unallocated Funds</h3>
-                <h1 id="env-unallocated" style="font-size: 40px; font-weight: 700; margin: 0; color: var(--text-main);">{{ currency }}0</h1>
+                <h1 id="env-unallocated" style="font-size: 36px; font-weight: bold; margin: 0; color: var(--text-light);">{{ currency }}0</h1>
             </div>
 
             <div class="env-columns" style="display: flex; flex-direction: column; gap: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 5px;">
-                    <span style="font-weight: 600; font-size: 18px;">Your Envelopes</span>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 5px;">
+                    <span style="font-weight: bold; font-size: 18px;">Your Envelopes</span>
                     <div style="text-align: right;">
-                        <span id="env-sum" style="color: var(--brand-primary); font-size: 15px; font-weight: 600; display: block;">Allocated: {{ currency }}0</span>
+                        <span id="env-sum" style="color: var(--brand-blue); font-size: 15px; font-weight: bold; display: block;">Allocated: {{ currency }}0</span>
                     </div>
                 </div>
                 <div id="env-list" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- JS injected items -->
                 </div>
-                <div onclick="addEnvItem()" style="margin-top: 5px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add envelope</div>
+                <div onclick="addEnvItem()" style="margin-top: 5px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add envelope</div>
             </div>
 
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px;">
-                <button class="btn btn-secondary" onclick="window.location.reload()">Reset</button>
-                <button class="btn btn-primary" onclick="saveConfig('envelope')">Save Config</button>
+                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);" onclick="window.location.reload()">Reset</button>
+                <button style="border-radius: 20px; padding: 12px 30px; font-size: 14px; background: var(--brand-blue); color: white; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600;" onclick="saveConfig('envelope')">Save Config</button>
             </div>
         </div>
     </div>
@@ -186,82 +184,82 @@
 
     {% if calc_type == 'zerobased' %}
     <!-- Zero-Based Budget Calc -->
-    <div class="budget-wrapper">
+    <div class="budget-wrapper" style="margin-top: 20px;">
         <h2 style="margin-bottom: 20px; font-weight: 700;">Zero-Based Budget Calculator</h2>
-        <div class="card">
+        <div class="budget-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Allocate every dollar of your income to expenses and savings. A healthy zero-based budget should leave exactly a $0 balance remaining.</p>
             
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="zb-freq" style="font-size: 14px; color: var(--text-main); font-weight: 500;">Income Frequency</label>
-                    <select id="zb-freq" class="form-control" style="width: 160px;" onchange="updateZeroBased()">
+                    <label for="zb-freq" style="font-size: 14px; color: var(--text-muted);">Income Frequency</label>
+                    <select id="zb-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateZeroBased()">
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Annually</option>
                         <option value="weekly">Weekly</option>
                     </select>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="zb-income" style="font-size: 14px; color: var(--text-main); font-weight: 500;">Total Income</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-main);">{{ currency }}</span>
-                        <input type="number" id="zb-income" placeholder="0" style="background: transparent; color: var(--text-main); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateZeroBased()">
+                    <label for="zb-income" style="font-size: 14px; color: var(--text-muted);">Total Income</label>
+                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
+                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
+                        <input type="number" id="zb-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateZeroBased()">
                     </div>
                 </div>
             </div>
 
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 30px 0;">
+            <hr style="border: none; border-top: 1px solid var(--border-dark); margin: 30px 0;">
 
             <!-- Summary Dashboard -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <p style="font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Total Expenses</p>
-                    <h3 id="zb-total-exp" style="font-size: 20px; color: var(--text-main); margin: 5px 0 0 0;">{{ currency }}0</h3>
+                <div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--border-dark); text-align: center;">
+                    <p style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Total Expenses</p>
+                    <h3 id="zb-total-exp" style="font-size: 20px; color: var(--text-light); margin: 5px 0 0 0;">{{ currency }}0</h3>
                 </div>
-                <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <p style="font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Allocated Funds</p>
-                    <h3 id="zb-allocated" style="font-size: 20px; color: var(--text-main); margin: 5px 0 0 0;">{{ currency }}0</h3>
+                <div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--border-dark); text-align: center;">
+                    <p style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Allocated Funds</p>
+                    <h3 id="zb-allocated" style="font-size: 20px; color: var(--text-light); margin: 5px 0 0 0;">{{ currency }}0</h3>
                 </div>
-                <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--brand-primary); text-align: center;">
-                    <p style="font-size: 12px; color: var(--brand-primary); font-weight: 600; text-transform: uppercase;">Balance Remaining</p>
-                    <h3 id="zb-balance" style="font-size: 24px; color: var(--text-main); margin: 5px 0 0 0; font-weight: 700;">{{ currency }}0</h3>
+                <div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--brand-blue); text-align: center;">
+                    <p style="font-size: 12px; color: var(--brand-blue); font-weight: 600; text-transform: uppercase;">Balance Remaining</p>
+                    <h3 id="zb-balance" style="font-size: 24px; color: var(--text-light); margin: 5px 0 0 0; font-weight: bold;">{{ currency }}0</h3>
                 </div>
-                <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <p style="font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Expense %</p>
-                    <h3 id="zb-exp-pct" style="font-size: 20px; color: var(--text-main); margin: 5px 0 0 0;">0%</h3>
+                <div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--border-dark); text-align: center;">
+                    <p style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Expense %</p>
+                    <h3 id="zb-exp-pct" style="font-size: 20px; color: var(--text-light); margin: 5px 0 0 0;">0%</h3>
                 </div>
-                <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
-                    <p style="font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Savings %</p>
-                    <h3 id="zb-sav-pct" style="font-size: 20px; color: var(--text-main); margin: 5px 0 0 0;">0%</h3>
+                <div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--border-dark); text-align: center;">
+                    <p style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Savings %</p>
+                    <h3 id="zb-sav-pct" style="font-size: 20px; color: var(--text-light); margin: 5px 0 0 0;">0%</h3>
                 </div>
             </div>
 
             <div class="env-columns" style="display: flex; flex-direction: row; gap: 40px; flex-wrap: wrap;">
                 <!-- Expenses List -->
                 <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
-                    <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: 600; font-size: 18px;">Expenses</span>
+                    <div style="border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Expenses</span>
                     </div>
                     <div id="zb-exp-list" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- JS Injected -->
                     </div>
-                    <div onclick="addZBItem('zb-exp-list', 'zb-exp-val')" style="margin-top: 15px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add expense</div>
+                    <div onclick="addZBItem('zb-exp-list', 'zb-exp-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add expense</div>
                 </div>
 
                 <!-- Savings List -->
                 <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
-                    <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
-                        <span style="font-weight: 600; font-size: 18px;">Savings & Goals</span>
+                    <div style="border-bottom: 2px solid var(--border-dark); padding-bottom: 8px; margin-bottom: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Savings & Goals</span>
                     </div>
                     <div id="zb-sav-list" style="display: flex; flex-direction: column; gap: 10px;">
                         <!-- JS Injected -->
                     </div>
-                    <div onclick="addZBItem('zb-sav-list', 'zb-sav-val')" style="margin-top: 15px; color: var(--brand-primary); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add savings</div>
+                    <div onclick="addZBItem('zb-sav-list', 'zb-sav-val')" style="margin-top: 15px; color: var(--brand-blue); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; user-select: none;">+ Add savings</div>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px;">
-                <button class="btn btn-secondary" onclick="window.location.reload()">Reset</button>
-                <button class="btn btn-primary" onclick="saveConfig('zerobased')">Save Config</button>
+                <button class="btn-outline" style="border-radius: 20px; padding: 12px 30px; font-size: 14px; border-color: var(--border-dark);" onclick="window.location.reload()">Reset</button>
+                <button style="border-radius: 20px; padding: 12px 30px; font-size: 14px; background: var(--brand-blue); color: white; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600;" onclick="saveConfig('zerobased')">Save Config</button>
             </div>
         </div>
     </div>
@@ -318,14 +316,14 @@
         if (!list) return;
 
         const div = document.createElement('div');
-        div.className = 'b-item';
-        div.style.cssText = 'display: flex; align-items: stretch; gap: 8px; margin-bottom: 5px;';
+        div.className = 'b-item flex-wrap';
+        div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Item name" class="form-control" value="${initialName}" style="flex:1; min-width: 80px; height: 42px;">
-            <div style="display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-main); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateSums()" style="width:70px; background:transparent; color:var(--text-main); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Item name" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
+            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
+                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateSums()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
             </div>
             <button onclick="this.parentElement.remove(); updateSums();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;
@@ -362,11 +360,11 @@
         if(unallocatedEl) {
             unallocatedEl.innerText = `{{ currency }}${unallocated.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
             if (unallocated > 0) {
-                unallocatedEl.style.color = 'var(--text-main)';
+                unallocatedEl.style.color = 'var(--text-light)';
             } else if (unallocated === 0) {
-                unallocatedEl.style.color = 'var(--success)';
+                unallocatedEl.style.color = '#10b981'; // green equivalent
             } else {
-                unallocatedEl.style.color = 'var(--danger)';
+                unallocatedEl.style.color = '#ef4444'; // red equivalent
             }
         }
     }
@@ -376,14 +374,14 @@
         if (!list) return;
 
         const div = document.createElement('div');
-        div.className = 'b-item';
-        div.style.cssText = 'display: flex; align-items: stretch; gap: 8px; margin-bottom: 5px;';
+        div.className = 'b-item flex-wrap';
+        div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Envelope name (e.g. Groceries)" class="form-control" value="${initialName}" style="flex:1; min-width: 80px; height: 42px;">
-            <div style="display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-main); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val env-val" value="${initialVal}" oninput="updateEnvelope()" style="width:70px; background:transparent; color:var(--text-main); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Envelope name" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
+            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
+                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val env-val" value="${initialVal}" oninput="updateEnvelope()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
             </div>
             <button onclick="this.parentElement.remove(); updateEnvelope();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;
@@ -480,11 +478,11 @@
         const balanceEl = document.getElementById('zb-balance');
         balanceEl.innerText = `{{ currency }}${balance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
         if (balance > 0) {
-            balanceEl.style.color = 'var(--text-main)';
+            balanceEl.style.color = 'var(--text-light)';
         } else if (balance === 0) {
-            balanceEl.style.color = 'var(--success)';
+            balanceEl.style.color = '#10b981';
         } else {
-            balanceEl.style.color = 'var(--danger)';
+            balanceEl.style.color = '#ef4444';
         }
 
         const expPct = monthlyIncome > 0 ? (expenses / monthlyIncome * 100) : 0;
@@ -498,14 +496,14 @@
         if (!list) return;
 
         const div = document.createElement('div');
-        div.className = 'b-item';
-        div.style.cssText = 'display: flex; align-items: stretch; gap: 8px; margin-bottom: 5px;';
+        div.className = 'b-item flex-wrap';
+        div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Category" class="form-control" value="${initialName}" style="flex:1; min-width: 80px; height: 42px;">
-            <div style="display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 12px; height: 42px; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-main); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateZeroBased()" style="width:70px; background:transparent; color:var(--text-main); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Category" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
+            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
+                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateZeroBased()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
             </div>
             <button onclick="this.parentElement.remove(); updateZeroBased();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;

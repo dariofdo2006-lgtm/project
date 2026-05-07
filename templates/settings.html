@@ -1,68 +1,72 @@
 {% extends "base.html" %}
 
+{% block topbar_title %}Settings{% endblock %}
+
 {% block content %}
-<div class="content-header">
-    <h1 class="page-title">Account Settings</h1>
-</div>
+<div class="settings-container" style="max-width: 800px; margin: 0 auto; padding: 40px 20px; color: var(--text-light);">
+    <h1 style="margin-bottom: 30px; font-weight: 700;">Account Settings</h1>
 
-<div class="card mb-6">
-    <h2 class="card-title" style="color: var(--brand-primary); margin-bottom: 8px;">Currency Configuration</h2>
-    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Choose a custom currency symbol to be displayed across your entire dashboard.</p>
-    
-    <div class="flex gap-4 items-center">
-        <select id="currency-input" class="form-control" style="width: 240px;">
-            <option value="$" {% if currency == '$' %}selected{% endif %}>USD ($) - US Dollar</option>
-            <option value="€" {% if currency == '€' %}selected{% endif %}>EUR (€) - Euro</option>
-            <option value="£" {% if currency == '£' %}selected{% endif %}>GBP (£) - British Pound</option>
-            <option value="¥" {% if currency == '¥' %}selected{% endif %}>JPY/CNY (¥) - Yen/Yuan</option>
-            <option value="₹" {% if currency == '₹' %}selected{% endif %}>INR (₹) - Indian Rupee</option>
-            <option value="C$" {% if currency == 'C$' %}selected{% endif %}>CAD (C$) - Canadian Dollar</option>
-            <option value="A$" {% if currency == 'A$' %}selected{% endif %}>AUD (A$) - Australian Dollar</option>
-            <option value="CHF" {% if currency == 'CHF' %}selected{% endif %}>CHF - Swiss Franc</option>
-            <option value="S$" {% if currency == 'S$' %}selected{% endif %}>SGD (S$) - Singapore Dollar</option>
-            <option value="HK$" {% if currency == 'HK$' %}selected{% endif %}>HKD (HK$) - Hong Kong Dollar</option>
-        </select>
-        <button onclick="updateCurrency()" class="btn btn-primary">Save Currency</button>
-    </div>
-</div>
-
-<div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
-    <!-- Expense Categories -->
-    <div class="card">
-        <h2 class="card-title" style="color: var(--brand-primary); margin-bottom: 20px;">Expense Categories</h2>
+    <!-- Currency Settings -->
+    <div class="settings-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+        <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--brand-blue);">Currency Configuration</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Choose a custom currency symbol to be displayed across your entire dashboard.</p>
         
-        <div class="flex gap-2 mb-6">
-            <input type="text" id="new-expense-cat" class="form-control" placeholder="Add custom expense...">
-            <button onclick="addCategory('expense')" class="btn btn-secondary">Add</button>
+        <div class="flex-wrap" style="display: flex; gap: 15px; align-items: center;">
+            <select id="currency-input" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; width: 220px; transition: 0.2s; outline: none; flex: 1; min-width: 200px;">
+                <option value="$" {% if currency == '$' %}selected{% endif %}>USD ($) - US Dollar</option>
+                <option value="€" {% if currency == '€' %}selected{% endif %}>EUR (€) - Euro</option>
+                <option value="£" {% if currency == '£' %}selected{% endif %}>GBP (£) - British Pound</option>
+                <option value="¥" {% if currency == '¥' %}selected{% endif %}>JPY/CNY (¥) - Yen/Yuan</option>
+                <option value="₹" {% if currency == '₹' %}selected{% endif %}>INR (₹) - Indian Rupee</option>
+                <option value="C$" {% if currency == 'C$' %}selected{% endif %}>CAD (C$) - Canadian Dollar</option>
+                <option value="A$" {% if currency == 'A$' %}selected{% endif %}>AUD (A$) - Australian Dollar</option>
+                <option value="CHF" {% if currency == 'CHF' %}selected{% endif %}>CHF - Swiss Franc</option>
+                <option value="S$" {% if currency == 'S$' %}selected{% endif %}>SGD (S$) - Singapore Dollar</option>
+                <option value="HK$" {% if currency == 'HK$' %}selected{% endif %}>HKD (HK$) - Hong Kong Dollar</option>
+            </select>
+            <button onclick="updateCurrency()" style="background: var(--brand-blue); color: white; border: none; border-radius: 8px; padding: 0 24px; height: 48px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.2s; white-space: nowrap;">Save Currency</button>
         </div>
-        
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-            {% for cat in categories %}
-            <li style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-                <span style="font-weight: 500;">{{ cat }}</span>
-                <button onclick="deleteCategory('expense', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 24px; cursor: pointer; line-height: 1; transition: 0.2s;">&times;</button>
-            </li>
-            {% endfor %}
-        </ul>
     </div>
 
-    <!-- Income Categories -->
-    <div class="card">
-        <h2 class="card-title" style="color: var(--brand-primary); margin-bottom: 20px;">Income Categories</h2>
-        
-        <div class="flex gap-2 mb-6">
-            <input type="text" id="new-income-cat" class="form-control" placeholder="Add custom income...">
-            <button onclick="addCategory('income')" class="btn btn-secondary">Add</button>
+    <!-- Category Settings -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+        <!-- Expense Categories -->
+        <div class="settings-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--brand-blue);">Expense Categories</h2>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <input type="text" id="new-expense-cat" placeholder="Add custom expense..." style="flex: 1; min-width: 0; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; outline: none; transition: 0.2s;">
+                <button onclick="addCategory('expense')" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 20px; height: 48px; font-weight: 500; cursor: pointer; transition: 0.2s;">Add</button>
+            </div>
+            
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                {% for cat in categories %}
+                <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-dark);">
+                    <span style="word-break: break-word; padding-right: 10px;">{{ cat }}</span>
+                    <button onclick="deleteCategory('expense', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 20px; cursor: pointer; line-height: 1; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-        
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-            {% for cat in income_categories %}
-            <li style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-                <span style="font-weight: 500;">{{ cat }}</span>
-                <button onclick="deleteCategory('income', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 24px; cursor: pointer; line-height: 1; transition: 0.2s;">&times;</button>
-            </li>
-            {% endfor %}
-        </ul>
+
+        <!-- Income Categories -->
+        <div class="settings-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--brand-blue);">Income Categories</h2>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <input type="text" id="new-income-cat" placeholder="Add custom income..." style="flex: 1; min-width: 0; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; outline: none; transition: 0.2s;">
+                <button onclick="addCategory('income')" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 20px; height: 48px; font-weight: 500; cursor: pointer; transition: 0.2s;">Add</button>
+            </div>
+            
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                {% for cat in income_categories %}
+                <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-dark);">
+                    <span style="word-break: break-word; padding-right: 10px;">{{ cat }}</span>
+                    <button onclick="deleteCategory('income', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 20px; cursor: pointer; line-height: 1; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 

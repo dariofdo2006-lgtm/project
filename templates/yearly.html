@@ -4,37 +4,37 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
+{% block topbar_title %}Yearly Report - {{ year }}{% endblock %}
+
 {% block content %}
-<div class="content-header">
-    <h1 class="page-title">Yearly Report - {{ year }}</h1>
-</div>
-
-<div class="card mb-6">
-    <div class="flex justify-between items-center mb-6">
-        <button class="btn btn-secondary" onclick="window.location.href='/yearly?year={{ year - 1 }}'">&lt; Previous Year</button>
-        <div style="font-size: 24px; font-weight: 700;">{{ year }}</div>
-        <button class="btn btn-secondary" onclick="window.location.href='/yearly?year={{ year + 1 }}'">Next Year &gt;</button>
-    </div>
-
-    <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 30px; border-top: 1px solid var(--border-color); padding-top: 30px;">
-        <div class="stat-item flex-col items-center">
-            <span class="stat-label">Total Income ({{ year }})</span>
-            <span class="stat-value text-success" style="font-size: 28px;">{{ currency }}{{ "%.2f"|format(yearly_income) }}</span>
+<div class="dashboard-panes" style="flex-direction: column;">
+    <div class="summary-panel" style="padding: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <button class="btn-outline" onclick="window.location.href='/yearly?year={{ year - 1 }}'">&lt; Previous Year</button>
+            <div style="font-size: 24px; font-weight: 700;">{{ year }}</div>
+            <button class="btn-outline" onclick="window.location.href='/yearly?year={{ year + 1 }}'">Next Year &gt;</button>
         </div>
-        <div class="stat-item flex-col items-center">
-            <span class="stat-label">Total Expenses ({{ year }})</span>
-            <span class="stat-value text-danger" style="font-size: 28px;">{{ currency }}{{ "%.2f"|format(yearly_expenses) }}</span>
-        </div>
-        <div class="stat-item flex-col items-center">
-            <span class="stat-label">Net Savings</span>
-            <span class="stat-value {% if yearly_income >= yearly_expenses %}text-success{% else %}text-danger{% endif %}" style="font-size: 28px;">
-                {{ currency }}{{ "%.2f"|format(yearly_income - yearly_expenses) }}
-            </span>
-        </div>
-    </div>
 
-    <div style="margin-top: 40px; height: 400px; width: 100%;">
-        <canvas id="yearlyChart"></canvas>
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 30px; border-top: 1px solid var(--border-dark); padding-top: 30px; text-align: center;">
+            <div>
+                <div class="stat-label" style="margin-bottom: 5px;">Total Income ({{ year }})</div>
+                <div class="stat-val text-success" style="font-size: 28px;">{{ currency }}{{ "%.2f"|format(yearly_income) }}</div>
+            </div>
+            <div>
+                <div class="stat-label" style="margin-bottom: 5px;">Total Expenses ({{ year }})</div>
+                <div class="stat-val text-danger" style="font-size: 28px;">{{ currency }}{{ "%.2f"|format(yearly_expenses) }}</div>
+            </div>
+            <div>
+                <div class="stat-label" style="margin-bottom: 5px;">Net Savings</div>
+                <div class="stat-val {% if yearly_income >= yearly_expenses %}text-success{% else %}text-danger{% endif %}" style="font-size: 28px;">
+                    {{ currency }}{{ "%.2f"|format(yearly_income - yearly_expenses) }}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; height: 400px; width: 100%;">
+            <canvas id="yearlyChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -49,11 +49,6 @@
         const chartData = JSON.parse(document.getElementById('chartData').textContent);
         const ctx = document.getElementById('yearlyChart').getContext('2d');
         
-        // Helper to get CSS variables for Chart.js
-        const getCSSVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || getComputedStyle(document.body).getPropertyValue(name).trim();
-
-        // We will define colors based on standard themes, but since theme can change dynamically, 
-        // a simple approach for charts is a neutral grey for grids and labels.
         const gridColor = 'rgba(150, 150, 150, 0.2)';
         const textColor = '#8e8e93';
 
