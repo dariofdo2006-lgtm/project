@@ -117,12 +117,12 @@
         
         <div class="input-group">
             <label>Date</label>
-            <input type="date" id="tx-date" name="date" required>
+            <input type="date" id="tx-date" name="date" required class="unified-input">
         </div>
         
         <div class="input-group">
             <label>Type</label>
-            <select id="tx-type" name="type" onchange="updateCatDropdown()">
+            <select id="tx-type" name="type" onchange="updateCatDropdown()" class="unified-select">
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
             </select>
@@ -130,22 +130,24 @@
         
         <div class="input-group">
             <label>Category</label>
-            <select id="tx-category" name="category" required></select>
+            <select id="tx-category" name="category" required class="unified-select"></select>
         </div>
         
         <div class="input-group">
             <label>Amount ({{ currency }})</label>
-            <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required>
+            <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required class="unified-input">
         </div>
         
         <div class="input-group">
             <label>Description / Name</label>
-            <input type="text" id="tx-name" name="name" required>
+            <input type="text" id="tx-name" name="name" required class="unified-input">
         </div>
         
         <div class="input-group">
             <label>Receipt Image (Optional)</label>
             <input type="file" id="receipt-input" name="receipt" accept="image/*">
+            <button type="button" id="scan-receipt-btn" class="btn-outline" style="margin-top:10px; width:100%;" onclick="scanReceiptAndFill()">Scan Receipt & Auto Fill</button>
+            <small id="scan-status" style="display:block; margin-top:8px; color:var(--text-muted);"></small>
         </div>
         
         <div style="display:flex; gap:10px; margin-top:30px;">

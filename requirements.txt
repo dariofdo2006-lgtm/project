@@ -3,3 +3,5 @@ gunicorn==21.2.0
 psycopg2-binary==2.9.9
 fpdf2==2.8.7
 pymongo==4.10.1
+pytesseract==0.3.13
+Pillow==11.2.1

@@ -52,17 +52,19 @@
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="budget-freq" style="font-size: 14px; color: var(--text-muted);">How often do you receive your income?</label>
-                    <select id="budget-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateTargets()">
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Annually</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
+                    <div class="input-group" style="width: 160px; margin-bottom: 0;">
+                        <select id="budget-freq" class="unified-select" onchange="updateTargets()">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Annually</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="budget-income" style="font-size: 14px; color: var(--text-muted);">What is your after-tax income?</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
-                        <input type="number" id="budget-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateTargets()">
+                    <div class="unified-input-wrapper">
+                        <span class="currency-symbol">{{ currency }}</span>
+                        <input type="number" id="budget-income" placeholder="0" oninput="updateTargets()">
                     </div>
                 </div>
             </div>
@@ -139,17 +141,19 @@
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="env-freq" style="font-size: 14px; color: var(--text-muted);">How often do you receive your income?</label>
-                    <select id="env-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateEnvelope()">
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Annually</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
+                    <div class="input-group" style="width: 160px; margin-bottom: 0;">
+                        <select id="env-freq" class="unified-select" onchange="updateEnvelope()">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Annually</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="env-income" style="font-size: 14px; color: var(--text-muted);">What is your take-home pay?</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
-                        <input type="number" id="env-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateEnvelope()">
+                    <div class="unified-input-wrapper">
+                        <span class="currency-symbol">{{ currency }}</span>
+                        <input type="number" id="env-income" placeholder="0" oninput="updateEnvelope()">
                     </div>
                 </div>
             </div>
@@ -192,17 +196,19 @@
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 450px; margin-bottom: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="zb-freq" style="font-size: 14px; color: var(--text-muted);">Income Frequency</label>
-                    <select id="zb-freq" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px 12px; height: 42px; width: 160px; font-family: 'Inter', sans-serif;" onchange="updateZeroBased()">
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Annually</option>
-                        <option value="weekly">Weekly</option>
-                    </select>
+                    <div class="input-group" style="width: 160px; margin-bottom: 0;">
+                        <select id="zb-freq" class="unified-select" onchange="updateZeroBased()">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Annually</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label for="zb-income" style="font-size: 14px; color: var(--text-muted);">Total Income</label>
-                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px;">
-                        <span style="font-weight: bold; font-size: 15px; color: var(--text-light);">{{ currency }}</span>
-                        <input type="number" id="zb-income" placeholder="0" style="background: transparent; color: var(--text-light); border: none; outline: none; width: 110px; font-family: 'Inter', sans-serif; font-size: 15px;" oninput="updateZeroBased()">
+                    <div class="unified-input-wrapper">
+                        <span class="currency-symbol">{{ currency }}</span>
+                        <input type="number" id="zb-income" placeholder="0" oninput="updateZeroBased()">
                     </div>
                 </div>
             </div>
@@ -320,12 +326,12 @@
         div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Item name" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
-            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateSums()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Item name" value="${initialName}" class="unified-input" style="flex:1; min-width: 80px;">
+            <div class="unified-input-wrapper" style="width: auto; min-width: 120px;">
+                <span class="currency-symbol">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateSums()" step="any">
             </div>
-            <button onclick="this.parentElement.remove(); updateSums();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+            <button onclick="this.parentElement.remove(); updateSums();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 48px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;
         list.appendChild(div);
     }
@@ -378,12 +384,12 @@
         div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Envelope name" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
-            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val env-val" value="${initialVal}" oninput="updateEnvelope()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Envelope name" value="${initialName}" class="unified-input" style="flex:1; min-width: 80px;">
+            <div class="unified-input-wrapper" style="width: auto; min-width: 120px;">
+                <span class="currency-symbol">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val env-val" value="${initialVal}" oninput="updateEnvelope()" step="any">
             </div>
-            <button onclick="this.parentElement.remove(); updateEnvelope();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+            <button onclick="this.parentElement.remove(); updateEnvelope();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 48px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;
         list.appendChild(div);
     }
@@ -432,7 +438,7 @@
         }
         
         if (payload) {
-            fetch('/api/calculator/save', {
+            apiFetch('/api/calculator/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: type, data: payload })
@@ -500,12 +506,12 @@
         div.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 5px;';
         
         div.innerHTML = `
-            <input type="text" placeholder="Category" value="${initialName}" style="flex:1; min-width: 80px; background:var(--bg-dark); color:var(--text-light); border:1px solid var(--border-dark); padding:8px 12px; border-radius:6px; font-size:14px; outline:none; height: 42px; box-sizing: border-box; transition: 0.2s;">
-            <div style="display: flex; align-items: center; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 6px; padding: 0 12px; height: 42px; box-sizing: border-box;">
-                <span style="font-weight:bold; font-size: 14px; color: var(--text-light); line-height: 1;">{{ currency }}</span>
-                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateZeroBased()" style="width:70px; background:transparent; color:var(--text-light); border:none; padding:0 6px; font-size:14px; outline:none; height: 100%; box-sizing: border-box;" step="any">
+            <input type="text" placeholder="Category" value="${initialName}" class="unified-input" style="flex:1; min-width: 80px;">
+            <div class="unified-input-wrapper" style="width: auto; min-width: 120px;">
+                <span class="currency-symbol">{{ currency }}</span>
+                <input type="number" placeholder="0" class="b-item-val ${valClass}" value="${initialVal}" oninput="updateZeroBased()" step="any">
             </div>
-            <button onclick="this.parentElement.remove(); updateZeroBased();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+            <button onclick="this.parentElement.remove(); updateZeroBased();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:22px; line-height: 1; padding:0 4px; display:flex; align-items:center; justify-content:center; height: 48px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
         `;
         list.appendChild(div);
     }

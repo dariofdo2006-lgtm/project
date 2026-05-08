@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     import psycopg2
@@ -125,6 +126,7 @@ class Database:
             self.execute("ALTER TABLE expenses ADD COLUMN is_recurring BOOLEAN DEFAULT 0")
 
     def register_user(self, username, password):
+        hashed_password = generate_password_hash(password)
         try:
             if self.is_mongo:
                 if self.db.users.find_one({"username": username}):
@@ -133,13 +135,13 @@ class Database:
                 self.db.users.insert_one({
                     "id": user_id,
                     "username": username,
-                    "password": password
+                    "password": hashed_password
                 })
             elif self.is_postgres:
-                self.cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id", (username, password))
+                self.cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id", (username, hashed_password))
                 user_id = self.cursor.fetchone()[0]
             else:
-                self.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+                self.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
                 user_id = self.cursor.lastrowid
             
             self.seed_default_categories(user_id)
@@ -149,24 +151,42 @@ class Database:
 
     def login_user(self, username, password):
         if self.is_mongo:
-            user = self.db.users.find_one({"username": username, "password": password})
-            return user["id"] if user else None
+            user = self.db.users.find_one({"username": username})
+            if not user:
+                return None
+            stored_password = user.get("password", "")
+            if check_password_hash(stored_password, password):
+                return user["id"]
+            if stored_password == password:
+                self.db.users.update_one(
+                    {"id": user["id"]},
+                    {"$set": {"password": generate_password_hash(password)}}
+                )
+                return user["id"]
+            return None
 
-        self.execute("SELECT id FROM users WHERE username = ? AND password = ?", (username, password))
+        self.execute("SELECT id, password FROM users WHERE username = ?", (username,))
         result = self.cursor.fetchone()
-        if result:
-            return result[0]
+        if not result:
+            return None
+        user_id, stored_password = result[0], result[1]
+        if check_password_hash(stored_password, password):
+            return user_id
+        if stored_password == password:
+            self.execute("UPDATE users SET password = ? WHERE id = ?", (generate_password_hash(password), user_id))
+            return user_id
         return None
 
     def update_password(self, username, new_password):
+        hashed_password = generate_password_hash(new_password)
         if self.is_mongo:
-            result = self.db.users.update_one({"username": username}, {"$set": {"password": new_password}})
+            result = self.db.users.update_one({"username": username}, {"$set": {"password": hashed_password}})
             return result.modified_count > 0
 
         self.execute("SELECT id FROM users WHERE username = ?", (username,))
         if not self.cursor.fetchone():
             return False
-        self.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
+        self.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_password, username))
         return True
 
     def add_expense(self, user_id, date, amount, category, name, image_path=None, is_recurring=False):

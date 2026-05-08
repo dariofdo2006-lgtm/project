@@ -10,6 +10,25 @@ function toggleSidebar(id) {
     }
 }
 
+function getCsrfToken() {
+    const el = document.querySelector('meta[name="csrf-token"]');
+    return el ? el.content : '';
+}
+
+function apiFetch(url, options = {}) {
+    const opts = { ...options };
+    const method = (opts.method || 'GET').toUpperCase();
+    const headers = { ...(opts.headers || {}) };
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        const token = getCsrfToken();
+        if (token) {
+            headers['X-CSRF-Token'] = token;
+        }
+    }
+    opts.headers = headers;
+    return fetch(url, opts);
+}
+
 function toggleMobileSidebar() {
     document.querySelector('.sidebar').classList.toggle('active');
 }
@@ -50,6 +69,7 @@ function openModal(dateStr) {
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-name').value = '';
     document.getElementById('receipt-input').value = '';
+    setScanStatus('');
     
     document.getElementById('modal-title').innerText = 'Add Transaction';
     document.getElementById('del-btn').style.display = 'none';
@@ -66,6 +86,7 @@ function openEditModal(id, dateStr, amount, type, name, receipt_path) {
     document.getElementById('tx-amount').value = amount;
     document.getElementById('tx-name').value = name;
     document.getElementById('receipt-input').value = '';
+    setScanStatus('');
     
     document.getElementById('modal-title').innerText = 'Edit Transaction';
     document.getElementById('del-btn').style.display = 'block';
@@ -99,7 +120,84 @@ function updateCatDropdown() {
     });
 }
 
-function saveTransaction(e) {
+function setScanStatus(message, isError = false) {
+    const el = document.getElementById('scan-status');
+    if (!el) return;
+    el.innerText = message || '';
+    el.style.color = isError ? 'var(--danger)' : 'var(--text-muted)';
+}
+
+async function scanReceiptAndFill() {
+    const fileInput = document.getElementById('receipt-input');
+    const btn = document.getElementById('scan-receipt-btn');
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        setScanStatus('Choose a receipt image first.', true);
+        return;
+    }
+
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Scanning...';
+        }
+        setScanStatus('Scanning receipt...');
+        const res = await apiFetch('/api/receipt/scan', {
+            method: 'POST',
+            body: fd
+        });
+        const data = await res.json();
+        if (!data.success) {
+            setScanStatus(data.message || 'Scan failed.', true);
+            return;
+        }
+
+        const parsed = data.data || {};
+        if (parsed.amount !== null && parsed.amount !== undefined) {
+            document.getElementById('tx-amount').value = parsed.amount;
+        }
+        if (parsed.name) {
+            document.getElementById('tx-name').value = parsed.name;
+        }
+        if (parsed.category) {
+            const catSelect = document.getElementById('tx-category');
+            const options = Array.from(catSelect.options).map(opt => opt.value.toLowerCase());
+            const index = options.indexOf(String(parsed.category).toLowerCase());
+            if (index >= 0) {
+                catSelect.selectedIndex = index;
+            }
+        }
+        setScanStatus('Receipt scanned and fields updated.');
+    } catch (err) {
+        setScanStatus(`Scan failed: ${err.message}`, true);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = 'Scan Receipt & Auto Fill';
+        }
+    }
+}
+
+async function uploadReceiptForExpense(expenseId) {
+    const receiptInput = document.getElementById('receipt-input');
+    if (!receiptInput || !receiptInput.files || !receiptInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('file', receiptInput.files[0]);
+
+    const res = await apiFetch(`/api/expense/${expenseId}/receipt`, {
+        method: 'POST',
+        body: formData
+    });
+    const data = await res.json();
+    if (!data.success) {
+        throw new Error(data.message || 'Failed to upload receipt');
+    }
+}
+
+async function saveTransaction(e) {
     e.preventDefault();
     const id = document.getElementById('tx-id').value;
     const formData = new FormData(document.getElementById('tx-form'));
@@ -116,23 +214,30 @@ function saveTransaction(e) {
     formData.forEach((value, key) => payload[key] = value);
     payload.is_recurring = document.getElementById('tx-recurring') ? document.getElementById('tx-recurring').checked : false;
 
-    fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    }).then(res => res.json()).then(data => {
-        if(data.success) {
-            window.location.reload();
-        } else {
+    try {
+        const res = await apiFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) {
             alert('Error saving transaction: ' + (data.message || 'Unknown error'));
+            return;
         }
-    }).catch(err => alert('Error saving transaction: ' + err.message));
+
+        const expenseId = id || data.id;
+        await uploadReceiptForExpense(expenseId);
+        window.location.reload();
+    } catch (err) {
+        alert('Error saving transaction: ' + err.message);
+    }
 }
 
 function deleteExpense(id) {
     if(!confirm('Are you sure you want to delete this transaction?')) return;
     
-    fetch(`/api/expense/${id}`, {
+    apiFetch(`/api/expense/${id}`, {
         method: 'DELETE'
     }).then(res => res.json()).then(data => {
         if(data.success) {
@@ -183,7 +288,7 @@ if (document.getElementById('auth-form')) {
                 window.location.href = '/';
             } else {
                 const err = document.getElementById('error-msg');
-                err.innerText = data.error || 'Authentication failed';
+                err.innerText = data.message || 'Authentication failed';
                 err.style.display = 'block';
             }
         });

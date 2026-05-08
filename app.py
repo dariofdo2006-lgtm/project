@@ -3,14 +3,56 @@ import calendar
 from fpdf import FPDF
 import io
 import base64
+import secrets
 from datetime import datetime
 import json
+import re
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
+from werkzeug.exceptions import RequestEntityTooLarge
 from database import Database
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    Image = None
+    ImageOps = None
+try:
+    import pytesseract
+except ImportError:
+    pytesseract = None
+
+if pytesseract:
+    # Try multiple common Tesseract installation paths
+    tesseract_paths = [
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        "/usr/bin/tesseract",
+        "/usr/local/bin/tesseract",
+        "/opt/homebrew/bin/tesseract"
+    ]
+    
+    # Also check environment variable
+    env_path = os.environ.get("TESSERACT_PATH")
+    if env_path and os.path.exists(env_path):
+        pytesseract.pytesseract.tesseract_cmd = env_path
+    else:
+        # Try common installation paths
+        for path in tesseract_paths:
+            if os.path.exists(path):
+                pytesseract.pytesseract.tesseract_cmd = path
+                break
 
 app = Flask(__name__)
 # In production, set this from an environment variable!
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "budget_calendar_super_secret")
+secret_key = os.environ.get("FLASK_SECRET_KEY")
+if secret_key:
+    app.secret_key = secret_key
+else:
+    # Generate a secure random key for development
+    import secrets
+    app.secret_key = secrets.token_urlsafe(32)
+    import logging
+    logging.warning("Using auto-generated secret key. Set FLASK_SECRET_KEY environment variable in production!")
+app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 # Only makedirs here if you want it on launch, otherwise just ensure it
@@ -19,6 +61,105 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Create a single database instance
 db = Database()
+ALLOWED_RECEIPT_MIMETYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+def get_csrf_token():
+    token = session.get("csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["csrf_token"] = token
+    return token
+
+def validate_csrf():
+    sent_token = request.headers.get("X-CSRF-Token")
+    expected_token = session.get("csrf_token")
+    if not expected_token or not sent_token or not secrets.compare_digest(sent_token, expected_token):
+        return False
+    return True
+
+def guess_category_from_text(text):
+    t = text.lower()
+    category_keywords = {
+        "Food": ["restaurant", "cafe", "zomato", "swiggy", "food", "dine", "pizza", "burger"],
+        "Grocery": ["grocery", "supermarket", "mart", "provision", "fresh", "vegetable"],
+        "Transportation": ["uber", "ola", "taxi", "fuel", "petrol", "diesel", "bus", "metro", "train"],
+        "Electricity": ["electricity", "power bill", "kwh", "utility"],
+        "Water": ["water bill", "aqua", "water"],
+        "Hospital": ["hospital", "clinic", "pharmacy", "medical", "medicine"],
+        "Online Shopping": ["amazon", "flipkart", "myntra", "online order", "ecommerce"],
+        "Education": ["school", "college", "tuition", "course", "academy"],
+        "Entertainment": ["movie", "cinema", "netflix", "spotify", "game"],
+        "Clothing": ["shirt", "pant", "fashion", "garments", "clothing"],
+    }
+    for category, words in category_keywords.items():
+        if any(w in t for w in words):
+            return category
+    return "Other"
+
+def extract_amount_from_text(text):
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    priority_lines = [
+        ln for ln in lines
+        if any(k in ln.lower() for k in ["grand total", "total", "amount due", "net amount"])
+    ]
+    number_pattern = r"(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+\.\d{2})"
+
+    def to_float(raw):
+        try:
+            return float(raw.replace(",", ""))
+        except Exception:
+            return None
+
+    for ln in priority_lines:
+        matches = re.findall(number_pattern, ln)
+        if matches:
+            val = to_float(matches[-1])
+            if val is not None:
+                return val
+
+    all_matches = re.findall(number_pattern, text)
+    vals = [to_float(m) for m in all_matches]
+    vals = [v for v in vals if v is not None]
+    return max(vals) if vals else None
+
+def extract_name_from_text(text):
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    skip_tokens = (
+        "invoice", "bill", "receipt", "date", "time", "gst", "tax",
+        "phone", "tel", "www", "http", "thank you"
+    )
+    for ln in lines[:8]:
+        low = ln.lower()
+        if any(tok in low for tok in skip_tokens):
+            continue
+        if re.search(r"\d{2,}", ln):
+            continue
+        if len(ln) < 3:
+            continue
+        return ln[:80]
+    return lines[0][:80] if lines else "Receipt Purchase"
+
+def scan_receipt_locally(file_bytes):
+    if not Image or not ImageOps or not pytesseract:
+        return None, "Local OCR dependencies missing. Install Pillow and pytesseract."
+    try:
+        image = Image.open(io.BytesIO(file_bytes))
+        gray = ImageOps.grayscale(image)
+        boosted = ImageOps.autocontrast(gray)
+        text = pytesseract.image_to_string(boosted, config="--psm 6")
+        if not text or not text.strip():
+            return None, "Could not read text from receipt image."
+
+        amount = extract_amount_from_text(text)
+        name = extract_name_from_text(text)
+        category = guess_category_from_text(text)
+        return {
+            "name": name,
+            "amount": amount,
+            "category": category
+        }, None
+    except Exception as e:
+        return None, f"Local OCR failed: {e}"
 
 def process_recurring_expenses(user_id):
     now = datetime.now()
@@ -34,11 +175,14 @@ def process_recurring_expenses(user_id):
     if count == 0 and prev_expenses:
         for exp in prev_expenses:
             try:
-                day = exp[4].split("-")[2]
-                new_date = f"{cur_year:04d}-{cur_month:02d}-{day}"
+                source_date = datetime.strptime(exp[4], "%Y-%m-%d")
+                last_day_of_month = calendar.monthrange(cur_year, cur_month)[1]
+                target_day = min(source_date.day, last_day_of_month)
+                new_date = f"{cur_year:04d}-{cur_month:02d}-{target_day:02d}"
                 db.add_expense(user_id, new_date, exp[0], exp[1], exp[2], exp[3], True)
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f"Recurring expense copy skipped: {e}")
 
 @app.context_processor
 def inject_global_vars():
@@ -50,9 +194,14 @@ def inject_global_vars():
         return dict(
             currency=currency,
             categories=expense_cats,
-            income_categories=income_cats
+            income_categories=income_cats,
+            csrf_token=get_csrf_token()
         )
-    return dict(categories=[], income_categories=[], currency="₹")
+    return dict(categories=[], income_categories=[], currency="₹", csrf_token=get_csrf_token())
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_file(_e):
+    return jsonify({"success": False, "message": "File too large (max 4MB)."}), 413
 
 @app.route("/")
 def index():
@@ -63,6 +212,8 @@ def index():
     now = datetime.now()
     year = request.args.get("year", now.year, type=int)
     month = request.args.get("month", now.month, type=int)
+    if month is None or month < 1 or month > 12:
+        month = now.month
     selected_date = request.args.get("date", now.strftime("%Y-%m-%d"))
     
     # Base data
@@ -111,7 +262,8 @@ def login():
             try:
                 process_recurring_expenses(user_id)
             except Exception as e:
-                print(f"Recurring processing failed: {e}")
+                import logging
+                logging.error(f"Recurring processing failed: {e}")
             return jsonify({"success": True})
         return jsonify({"success": False, "message": "Invalid username or password"})
         
@@ -136,6 +288,8 @@ def logout():
 def add_expense():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
     data = request.json
     user_id = session["user_id"]
@@ -161,6 +315,8 @@ def add_expense():
 def upload_receipt(expense_id):
     if "user_id" not in session:
         return jsonify({"success": False}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     
     if 'file' not in request.files:
         return jsonify({"success": False}), 400
@@ -168,13 +324,58 @@ def upload_receipt(expense_id):
     file = request.files['file']
     if file.filename == '':
         return jsonify({"success": False}), 400
+    if file.mimetype not in ALLOWED_RECEIPT_MIMETYPES:
+        return jsonify({"success": False, "message": "Unsupported file type"}), 400
         
-    encoded_string = base64.b64encode(file.read()).decode('utf-8')
+    file_bytes = file.read()
+    if not file_bytes:
+        return jsonify({"success": False, "message": "Empty file"}), 400
+    encoded_string = base64.b64encode(file_bytes).decode('utf-8')
     data_uri = f"data:{file.mimetype};base64,{encoded_string}"
     
     db.update_expense_receipt(expense_id, session["user_id"], data_uri)
     
     return jsonify({"success": True})
+
+@app.route("/api/receipt/scan", methods=["POST"])
+def scan_receipt():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
+    if "file" not in request.files:
+        return jsonify({"success": False, "message": "No file provided"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"success": False, "message": "No file selected"}), 400
+    if file.mimetype not in ALLOWED_RECEIPT_MIMETYPES:
+        return jsonify({"success": False, "message": "Unsupported file type"}), 400
+
+    file_bytes = file.read()
+    if not file_bytes:
+        return jsonify({"success": False, "message": "Empty file"}), 400
+
+    scanned, err = scan_receipt_locally(file_bytes)
+    if err:
+        return jsonify({"success": False, "message": err}), 400
+
+    name = str(scanned.get("name", "")).strip()
+    raw_amount = scanned.get("amount", "")
+    try:
+        amount = float(raw_amount)
+    except (ValueError, TypeError):
+        amount = None
+    category = str(scanned.get("category", "")).strip()
+
+    return jsonify({
+        "success": True,
+        "data": {
+            "name": name,
+            "amount": amount,
+            "category": category
+        }
+    })
 
 @app.route("/api/receipt/<int:expense_id>")
 def view_receipt(expense_id):
@@ -191,6 +392,8 @@ def view_receipt(expense_id):
 def delete_expense(expense_id):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
     db.delete_expense(expense_id, session["user_id"])
     return jsonify({"success": True})
@@ -199,6 +402,8 @@ def delete_expense(expense_id):
 def update_expense(expense_id):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
     data = request.json
     user_id = session["user_id"]
@@ -326,6 +531,8 @@ def yearly_view():
 def save_calculator():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     
     data = request.json
     calc_type = data.get("type")
@@ -363,6 +570,8 @@ def settings_view():
 def update_currency():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     currency = request.json.get("currency_symbol", "₹")
     currency = currency[:3] # Limit to 3 chars
     db.update_settings(session["user_id"], currency)
@@ -372,6 +581,8 @@ def update_currency():
 def add_custom_category():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     name = request.json.get("name", "").strip()
     cat_type = request.json.get("type", "expense")
     if not name or cat_type not in ["expense", "income"]:
@@ -384,6 +595,8 @@ def add_custom_category():
 def delete_custom_category(cat_type, name):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
     db.delete_category(session["user_id"], name, cat_type)
     return jsonify({"success": True})

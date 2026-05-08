@@ -12,19 +12,21 @@
         <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Choose a custom currency symbol to be displayed across your entire dashboard.</p>
         
         <div class="flex-wrap" style="display: flex; gap: 15px; align-items: center;">
-            <select id="currency-input" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; width: 220px; transition: 0.2s; outline: none; flex: 1; min-width: 200px;">
-                <option value="$" {% if currency == '$' %}selected{% endif %}>USD ($) - US Dollar</option>
-                <option value="€" {% if currency == '€' %}selected{% endif %}>EUR (€) - Euro</option>
-                <option value="£" {% if currency == '£' %}selected{% endif %}>GBP (£) - British Pound</option>
-                <option value="¥" {% if currency == '¥' %}selected{% endif %}>JPY/CNY (¥) - Yen/Yuan</option>
-                <option value="₹" {% if currency == '₹' %}selected{% endif %}>INR (₹) - Indian Rupee</option>
-                <option value="C$" {% if currency == 'C$' %}selected{% endif %}>CAD (C$) - Canadian Dollar</option>
-                <option value="A$" {% if currency == 'A$' %}selected{% endif %}>AUD (A$) - Australian Dollar</option>
-                <option value="CHF" {% if currency == 'CHF' %}selected{% endif %}>CHF - Swiss Franc</option>
-                <option value="S$" {% if currency == 'S$' %}selected{% endif %}>SGD (S$) - Singapore Dollar</option>
-                <option value="HK$" {% if currency == 'HK$' %}selected{% endif %}>HKD (HK$) - Hong Kong Dollar</option>
-            </select>
-            <button onclick="updateCurrency()" style="background: var(--brand-blue); color: white; border: none; border-radius: 8px; padding: 0 24px; height: 48px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.2s; white-space: nowrap;">Save Currency</button>
+            <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                <select id="currency-input" class="unified-select">
+                    <option value="$" {% if currency == '$' %}selected{% endif %}>USD ($) - US Dollar</option>
+                    <option value="€" {% if currency == '€' %}selected{% endif %}>EUR (€) - Euro</option>
+                    <option value="£" {% if currency == '£' %}selected{% endif %}>GBP (£) - British Pound</option>
+                    <option value="¥" {% if currency == '¥' %}selected{% endif %}>JPY/CNY (¥) - Yen/Yuan</option>
+                    <option value="₹" {% if currency == '₹' %}selected{% endif %}>INR (₹) - Indian Rupee</option>
+                    <option value="C$" {% if currency == 'C$' %}selected{% endif %}>CAD (C$) - Canadian Dollar</option>
+                    <option value="A$" {% if currency == 'A$' %}selected{% endif %}>AUD (A$) - Australian Dollar</option>
+                    <option value="CHF" {% if currency == 'CHF' %}selected{% endif %}>CHF - Swiss Franc</option>
+                    <option value="S$" {% if currency == 'S$' %}selected{% endif %}>SGD (S$) - Singapore Dollar</option>
+                    <option value="HK$" {% if currency == 'HK$' %}selected{% endif %}>HKD (HK$) - Hong Kong Dollar</option>
+                </select>
+            </div>
+            <button onclick="updateCurrency()" class="btn-primary" style="width: auto; padding: 0 24px; margin-top: 0;">Save Currency</button>
         </div>
     </div>
 
@@ -34,16 +36,18 @@
         <div class="settings-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--brand-blue);">Expense Categories</h2>
             
-            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                <input type="text" id="new-expense-cat" placeholder="Add custom expense..." style="flex: 1; min-width: 0; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; outline: none; transition: 0.2s;">
-                <button onclick="addCategory('expense')" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 20px; height: 48px; font-weight: 500; cursor: pointer; transition: 0.2s;">Add</button>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+                <input type="text" id="new-expense-cat" placeholder="Add custom expense..." style="flex: 1; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); padding: 8px 12px; border-radius: 6px; font-size: 14px; outline: none; height: 42px; box-sizing: border-box; transition: 0.2s;">
+                <button onclick="addCategory('expense')" style="background: var(--brand-blue); color: white; border: none; border-radius: 6px; padding: 0 20px; height: 42px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;">Add</button>
             </div>
             
             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
                 {% for cat in categories %}
-                <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-dark);">
-                    <span style="word-break: break-word; padding-right: 10px;">{{ cat }}</span>
-                    <button onclick="deleteCategory('expense', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 20px; cursor: pointer; line-height: 1; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+                <li style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; display: flex; align-items: center; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); padding: 0 12px; border-radius: 6px; font-size: 14px; height: 42px; box-sizing: border-box;">
+                        <span style="word-break: break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ cat }}</span>
+                    </div>
+                    <button onclick="deleteCategory('expense', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 22px; line-height: 1; padding: 0 4px; display: flex; align-items: center; justify-content: center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
                 </li>
                 {% endfor %}
             </ul>
@@ -53,16 +57,18 @@
         <div class="settings-panel" style="background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 30px;">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--brand-blue);">Income Categories</h2>
             
-            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                <input type="text" id="new-income-cat" placeholder="Add custom income..." style="flex: 1; min-width: 0; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 16px; height: 48px; font-family: 'Inter', sans-serif; outline: none; transition: 0.2s;">
-                <button onclick="addCategory('income')" style="background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); border-radius: 8px; padding: 0 20px; height: 48px; font-weight: 500; cursor: pointer; transition: 0.2s;">Add</button>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+                <input type="text" id="new-income-cat" placeholder="Add custom income..." style="flex: 1; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); padding: 8px 12px; border-radius: 6px; font-size: 14px; outline: none; height: 42px; box-sizing: border-box; transition: 0.2s;">
+                <button onclick="addCategory('income')" style="background: var(--brand-blue); color: white; border: none; border-radius: 6px; padding: 0 20px; height: 42px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;">Add</button>
             </div>
             
             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
                 {% for cat in income_categories %}
-                <li style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-dark);">
-                    <span style="word-break: break-word; padding-right: 10px;">{{ cat }}</span>
-                    <button onclick="deleteCategory('income', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); font-size: 20px; cursor: pointer; line-height: 1; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
+                <li style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; display: flex; align-items: center; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--border-dark); padding: 0 12px; border-radius: 6px; font-size: 14px; height: 42px; box-sizing: border-box;">
+                        <span style="word-break: break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ cat }}</span>
+                    </div>
+                    <button onclick="deleteCategory('income', '{{ cat }}')" style="background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 22px; line-height: 1; padding: 0 4px; display: flex; align-items: center; justify-content: center; height: 42px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">&times;</button>
                 </li>
                 {% endfor %}
             </ul>
@@ -73,7 +79,7 @@
 <script>
     function updateCurrency() {
         const currency = document.getElementById('currency-input').value.trim();
-        fetch('/api/settings/currency', {
+        apiFetch('/api/settings/currency', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ currency_symbol: currency })
@@ -91,7 +97,7 @@
         const name = document.getElementById(inputId).value.trim();
         if(!name) return;
 
-        fetch('/api/categories', {
+        apiFetch('/api/categories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, type: type })
@@ -107,7 +113,7 @@
     function deleteCategory(type, name) {
         if(!confirm(`Are you sure you want to delete the category "${name}"?`)) return;
 
-        fetch(`/api/categories/${encodeURIComponent(type)}/${encodeURIComponent(name)}`, {
+        apiFetch(`/api/categories/${encodeURIComponent(type)}/${encodeURIComponent(name)}`, {
             method: 'DELETE'
         }).then(res => res.json()).then(data => {
             if(data.success) {

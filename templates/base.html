@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Budget Calendar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -103,7 +104,7 @@
                 
                 <div class="topbar-search" style="flex: 1; display: flex; justify-content: flex-end; max-width: 450px; margin-left: 20px;">
                     <form action="/search" method="GET" style="display:flex; align-items:center; width: 100%; gap: 15px;">
-                        <input id="search-input" type="text" name="q" placeholder="Search transactions..." style="flex: 1; background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:8px; color:white; padding:12px 18px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; min-width: 150px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                        <input id="search-input" type="text" name="q" placeholder="Search transactions..." class="unified-input" style="flex: 1; min-width: 150px;">
                         <button type="submit" style="background:var(--brand-blue); border:none; color:white; padding:12px 24px; border-radius:8px; cursor:pointer; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 14px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);">Search</button>
                     </form>
                 </div>
