@@ -425,6 +425,17 @@ class Database:
         self.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? ORDER BY date DESC", (user_id,))
         return self.cursor.fetchall()
 
+    def get_expenses_by_date_range(self, user_id, start_date, end_date):
+        if self.is_mongo:
+            expenses = self.db.expenses.find({
+                "user_id": user_id,
+                "date": {"$gte": start_date, "$lte": end_date}
+            }).sort("date", pymongo.DESCENDING)
+            return [(e["date"], e["amount"], e["category"], e["name"]) for e in expenses]
+
+        self.execute("SELECT date, amount, category, name FROM expenses WHERE user_id = ? AND date >= ? AND date <= ? ORDER BY date DESC", (user_id, start_date, end_date))
+        return self.cursor.fetchall()
+
     def search_expenses(self, user_id, query):
         if self.is_mongo:
             expenses = self.db.expenses.find({

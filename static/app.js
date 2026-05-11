@@ -158,7 +158,12 @@ async function scanReceiptAndFill() {
         if (parsed.amount !== null && parsed.amount !== undefined) {
             document.getElementById('tx-amount').value = parsed.amount;
         }
-        if (parsed.name) {
+        if (parsed.type) {
+            document.getElementById('tx-type').value = parsed.type;
+        }
+        if (parsed.description) {
+            document.getElementById('tx-name').value = parsed.description;
+        } else if (parsed.name) {
             document.getElementById('tx-name').value = parsed.name;
         }
         if (parsed.category) {
