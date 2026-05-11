@@ -79,37 +79,28 @@
             <!-- Spacer -->
             <div style="flex: 1;"></div>
             
-            <!-- Export Dropdown -->
-            <div class="nav-item" style="position: relative; cursor: pointer;" onclick="toggleExportDropdown()">
+            <!-- Export Collapsible -->
+            <div class="nav-item collapsible-header" onclick="toggleSidebar('export-sub')">
                 <span class="nav-icon">📥</span>
                 <span class="nav-text">Export</span>
-                <div class="export-dropdown" id="exportDropdown" style="position: absolute; top: 100%; right: 0; background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 8px; padding: 8px 0; min-width: 220px; display: none; z-index: 1000;">
-                    <!-- Date Range Section -->
-                    <div style="padding: 10px 15px; border-bottom: 1px solid var(--border-dark);">
-                        <div style="font-size: 12px; color: var(--text-light); margin-bottom: 8px; font-weight: bold;">Date Range (Optional)</div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="date" id="exportStartDate" class="unified-input" style="flex: 1; padding: 4px 8px; font-size: 12px; height: 32px;" placeholder="From">
-                            <input type="date" id="exportEndDate" class="unified-input" style="flex: 1; padding: 4px 8px; font-size: 12px; height: 32px;" placeholder="To">
-                        </div>
-                    </div>
-                    
-                    <!-- Export Options -->
-                    <a href="/api/export" class="dropdown-item" onclick="applyDateRangeToExport(event, this)" style="display: block; padding: 10px 20px; color: var(--text-light); text-decoration: none; font-size: 14px;">
-                        <span style="margin-right: 8px;">📄</span> PDF Export
-                    </a>
-                    <a href="/api/export/excel" class="dropdown-item" onclick="applyDateRangeToExport(event, this)" style="display: block; padding: 10px 20px; color: var(--text-light); text-decoration: none; font-size: 14px;">
-                        <span style="margin-right: 8px;">📊</span> Excel Export
-                    </a>
-                    <a href="/api/export/csv" class="dropdown-item" onclick="applyDateRangeToExport(event, this)" style="display: block; padding: 10px 20px; color: var(--text-light); text-decoration: none; font-size: 14px;">
-                        <span style="margin-right: 8px;">📋</span> CSV Export
-                    </a>
-                    <a href="/api/export/json" class="dropdown-item" onclick="applyDateRangeToExport(event, this)" style="display: block; padding: 10px 20px; color: var(--text-light); text-decoration: none; font-size: 14px;">
-                        <span style="margin-right: 8px;">🗂️</span> JSON Backup
-                    </a>
-                    <a href="/api/export/report" class="dropdown-item" onclick="applyDateRangeToExport(event, this)" style="display: block; padding: 10px 20px; color: var(--text-light); text-decoration: none; font-size: 14px;">
-                        <span style="margin-right: 8px;">📈</span> Analysis Report
-                    </a>
-                </div>
+                <span class="chev" id="export-chev">›</span>
+            </div>
+            <div class="sub-nav" id="export-sub">
+                <a href="/api/export" class="nav-sub-item" target="_blank">
+                    <span class="nav-text">📄 PDF Export</span>
+                </a>
+                <a href="/api/export/excel" class="nav-sub-item" target="_blank">
+                    <span class="nav-text">📊 Excel Export</span>
+                </a>
+                <a href="/api/export/csv" class="nav-sub-item" target="_blank">
+                    <span class="nav-text">📋 CSV Export</span>
+                </a>
+                <a href="/api/export/json" class="nav-sub-item" target="_blank">
+                    <span class="nav-text">🗂️ JSON Backup</span>
+                </a>
+                <a href="/api/export/report" class="nav-sub-item" target="_blank">
+                    <span class="nav-text">📈 Analysis Report</span>
+                </a>
             </div>
             <a href="/settings" class="nav-item {% if active_view == 'settings' %}active{% endif %}">
                 <span class="nav-icon">⚙️</span>
@@ -146,59 +137,5 @@
     {% block modals %}{% endblock %}
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
-    <script>
-        function toggleExportDropdown() {
-            const dropdown = document.getElementById('exportDropdown');
-            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-                dropdown.style.display = 'block';
-            } else {
-                dropdown.style.display = 'none';
-            }
-        }
-        
-        function applyDateRangeToExport(event, element) {
-            event.preventDefault();
-            
-            const startDate = document.getElementById('exportStartDate').value;
-            const endDate = document.getElementById('exportEndDate').value;
-            
-            let url = element.href;
-            
-            if (startDate && endDate) {
-                const separator = url.includes('?') ? '&' : '?';
-                url += separator + 'start_date=' + startDate + '&end_date=' + endDate;
-            }
-            
-            // Open in new tab to download
-            window.open(url, '_blank');
-            
-            // Close dropdown
-            setTimeout(() => {
-                document.getElementById('exportDropdown').style.display = 'none';
-            }, 100);
-        }
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('exportDropdown');
-            const exportButton = dropdown.parentElement;
-            
-            if (!exportButton.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-        
-        // Add hover effects for dropdown items
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('mouseenter', function() {
-                    this.style.backgroundColor = 'var(--brand-blue)';
-                });
-                item.addEventListener('mouseleave', function() {
-                    this.style.backgroundColor = 'transparent';
-                });
-            });
-        });
-    </script>
 </body>
 </html>
