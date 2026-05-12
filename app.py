@@ -11,6 +11,7 @@ import re
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from werkzeug.exceptions import RequestEntityTooLarge
 from database import Database
+from firebase_config import db as firestore_db
 try:
     from PIL import Image, ImageOps
 except ImportError:
@@ -430,16 +431,15 @@ def login():
         username = data.get("username")
         password = data.get("password")
         
-        user_id = db.login_user(username, password)
-        if user_id:
-            session["user_id"] = user_id
-            try:
-                process_recurring_expenses(user_id)
-            except Exception as e:
-                import logging
-                logging.error(f"Recurring processing failed: {e}")
-            return jsonify({"success": True})
-        return jsonify({"success": False, "message": "Invalid username or password"})
+        docs = db.collection("users").stream()
+
+        for doc in docs:
+            user = doc.to_dict()
+
+            if user["username"] == username and user["password"] == password:
+                return "Login Success"
+
+        return "Invalid Login"
         
     return render_template("login.html")
 
@@ -449,9 +449,12 @@ def register():
     username = data.get("username")
     password = data.get("password")
     
-    if db.register_user(username, password):
-        return jsonify({"success": True})
-    return jsonify({"success": False, "message": "Username already exists"})
+    firestore_db.collection("users").add({
+        "username": username,
+        "password": password
+    })
+
+    return jsonify({"success": True})
 
 @app.route("/logout")
 def logout():
