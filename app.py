@@ -431,15 +431,24 @@ def login():
         username = data.get("username")
         password = data.get("password")
         
-        docs = db.collection("users").stream()
-
-        for doc in docs:
-            user = doc.to_dict()
-
-            if user["username"] == username and user["password"] == password:
-                return "Login Success"
-
-        return "Invalid Login"
+        try:
+            docs = firestore_db.collection("users").stream()
+            
+            for doc in docs:
+                user = doc.to_dict()
+                
+                if user["username"] == username and user["password"] == password:
+                    # Set session with user identifier
+                    session["user_id"] = doc.id
+                    session["username"] = username
+                    return jsonify({"success": True, "message": "Login successful"})
+            
+            return jsonify({"success": False, "message": "Invalid username or password"})
+            
+        except Exception as e:
+            import logging
+            logging.error(f"Login error: {e}")
+            return jsonify({"success": False, "message": "Authentication service unavailable"})
         
     return render_template("login.html")
 
