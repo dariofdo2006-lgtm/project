@@ -24,18 +24,24 @@
 
             <h3 style="color: var(--brand-blue); margin-top: 30px; margin-bottom: 15px; font-size: 18px;">3 Popular Budgeting Methods</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
-                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">50/30/20 Budget</h4>
-                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates 50% of your income strictly to Needs, 30% to Wants, and 20% to Savings or Debt repayment.</p>
-                </div>
-                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
-                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Envelope Budget</h4>
-                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates specific cash amounts into physical or digital categories (envelopes). Once empty, no more spending allowed!</p>
-                </div>
-                <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark);">
-                    <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Zero-Based Budget</h4>
-                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Ensures every single dollar of income is assigned a job (expense, saving, or investment) before taking home pay, leaving $0 unallocated.</p>
-                </div>
+                <a href="/calculator?type=budget" style="text-decoration: none; display: block;">
+                    <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark); height: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                        <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">50/30/20 Budget</h4>
+                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates 50% of your income strictly to Needs, 30% to Wants, and 20% to Savings or Debt repayment.</p>
+                    </div>
+                </a>
+                <a href="/calculator?type=envelope" style="text-decoration: none; display: block;">
+                    <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark); height: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                        <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Envelope Budget</h4>
+                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Allocates specific cash amounts into physical or digital categories (envelopes). Once empty, no more spending allowed!</p>
+                    </div>
+                </a>
+                <a href="/calculator?type=zerobased" style="text-decoration: none; display: block;">
+                    <div style="background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border-dark); height: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                        <h4 style="color: var(--text-light); margin-bottom: 10px; font-size: 16px;">Zero-Based Budget</h4>
+                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5;">Ensures every single dollar of income is assigned a job (expense, saving, or investment) before taking home pay, leaving $0 unallocated.</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>

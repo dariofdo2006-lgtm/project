@@ -11,7 +11,7 @@ import re
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from werkzeug.exceptions import RequestEntityTooLarge
 from database import Database
-from firebase_config import db as firestore_db
+
 try:
     from PIL import Image, ImageOps
 except ImportError:
@@ -63,6 +63,14 @@ else:
     import logging
     logging.warning("Using auto-generated secret key. Set FLASK_SECRET_KEY environment variable in production!")
 app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
+
+@app.before_request
+def redirect_www():
+    """Redirect www to non-www domain with 301."""
+    if request.host.startswith('www.'):
+        new_url = request.url.replace('www.', '', 1)
+        return redirect(new_url, code=301)
+
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 # Only makedirs here if you want it on launch, otherwise just ensure it
@@ -431,24 +439,13 @@ def login():
         username = data.get("username")
         password = data.get("password")
         
-        try:
-            docs = firestore_db.collection("users").stream()
-            
-            for doc in docs:
-                user = doc.to_dict()
-                
-                if user["username"] == username and user["password"] == password:
-                    # Set session with user identifier
-                    session["user_id"] = doc.id
-                    session["username"] = username
-                    return jsonify({"success": True, "message": "Login successful"})
-            
+        user_id = db.login_user(username, password)
+        if user_id is not None:
+            session["user_id"] = user_id
+            session["username"] = username
+            return jsonify({"success": True, "message": "Login successful"})
+        else:
             return jsonify({"success": False, "message": "Invalid username or password"})
-            
-        except Exception as e:
-            import logging
-            logging.error(f"Login error: {e}")
-            return jsonify({"success": False, "message": "Authentication service unavailable"})
         
     return render_template("login.html")
 
@@ -458,12 +455,10 @@ def register():
     username = data.get("username")
     password = data.get("password")
     
-    firestore_db.collection("users").add({
-        "username": username,
-        "password": password
-    })
-
-    return jsonify({"success": True})
+    if db.register_user(username, password):
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "message": "Username already exists"})
 
 @app.route("/logout")
 def logout():

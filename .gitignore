@@ -5,3 +5,4 @@ budget.db
 *.pyc
 .vscode/
 .env
+serviceAccountKey.json
