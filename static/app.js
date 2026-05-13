@@ -288,7 +288,12 @@ if (document.getElementById('auth-form')) {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: u, password: p})
-        }).then(res => res.json()).then(data => {
+        }).then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { throw new Error(text) });
+            }
+            return res.json();
+        }).then(data => {
             if(data.success) {
                 window.location.href = '/';
             } else {
@@ -296,6 +301,11 @@ if (document.getElementById('auth-form')) {
                 err.innerText = data.message || 'Authentication failed';
                 err.style.display = 'block';
             }
+        }).catch(err => {
+            const errEl = document.getElementById('error-msg');
+            errEl.innerText = 'Server error occurred. See console.';
+            errEl.style.display = 'block';
+            console.error('Auth error:', err);
         });
     });
 }

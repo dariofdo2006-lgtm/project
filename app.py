@@ -439,7 +439,16 @@ def login():
         username = data.get("username")
         password = data.get("password")
         
-        user_id = db.login_user(username, password)
+        print(f"[DEBUG LOGIN] Attempting login for username: '{username}'")
+        try:
+            user_id = db.login_user(username, password)
+            print(f"[DEBUG LOGIN] Returned user_id: {user_id}")
+        except Exception as e:
+            print(f"[DEBUG LOGIN] Exception in login_user: {e}")
+            import traceback
+            traceback.print_exc()
+            user_id = None
+            
         if user_id is not None:
             session["user_id"] = user_id
             session["username"] = username

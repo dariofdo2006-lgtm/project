@@ -192,23 +192,50 @@ class Database:
                 user_id = self.cursor.lastrowid
                 self.seed_default_categories(user_id)
                 return True
-        except Exception: # Catch IntegrityError from either library
+        except Exception as e: # Catch errors and log them
+            import traceback
+            traceback.print_exc()
             return False
 
     def login_user(self, username, password):
+        print(f"[DEBUG DB] login_user called with username: '{username}'")
         if self.is_firebase:
+            print("[DEBUG DB] Using Firebase logic")
             users = self.db.collection('users').where("username", "==", username).get()
+            print(f"[DEBUG DB] Firebase returned {len(users)} documents")
             if not users:
                 return None
             user = users[0].to_dict()
+            print(f"[DEBUG DB] First user dict: {user}")
             stored_password = user.get("password", "")
-            if check_password_hash(stored_password, password):
-                return user["id"]
+            
+            # Check if password matches (handling potential ValueError if hash is improperly formatted)
+            password_matches = False
+            try:
+                if check_password_hash(stored_password, password):
+                    password_matches = True
+            except ValueError:
+                # If ValueError is thrown, the stored password is not a valid Werkzeug hash.
+                print("[DEBUG DB] ValueError in check_password_hash (probably plaintext password)")
+                pass
+                
+            user_id = user.get("id", users[0].id)
+            # Try to cast user_id to int if it looks like one, to match sqlite behavior
+            if isinstance(user_id, str) and user_id.isdigit():
+                user_id = int(user_id)
+
+            print(f"[DEBUG DB] password_matches: {password_matches}, stored_password == password: {stored_password == password}")
+
+            if password_matches:
+                return user_id
+            
             if stored_password == password:
-                self.db.collection('users').document(str(user["id"])).update({
+                # If it was plaintext, update it to be hashed for future logins
+                print("[DEBUG DB] Updating plaintext password to hash")
+                self.db.collection('users').document(str(user_id)).update({
                     "password": generate_password_hash(password)
                 })
-                return user["id"]
+                return user_id
             return None
         elif self.is_mongo:
             user = self.db.users.find_one({"username": username})
