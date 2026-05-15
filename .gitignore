@@ -1,4 +1,6 @@
 venv/
+.local_packages/
+.pytest_cache/
 __pycache__/
 *.db
 budget.db

@@ -3,17 +3,23 @@ import os
 from firebase_admin import credentials
 from firebase_admin import firestore
 
-# Try to use environment variable first, then fall back to file
+SERVICE_ACCOUNT_PATH = "serviceAccountKey.json"
+
+# Try to use environment variable first, then fall back to file.
 firebase_credentials = os.environ.get('FIREBASE_CREDENTIALS')
 if firebase_credentials:
-    # Use environment variable (JSON string)
     import json
     cred_dict = json.loads(firebase_credentials)
     cred = credentials.Certificate(cred_dict)
+elif os.path.exists(SERVICE_ACCOUNT_PATH):
+    cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
 else:
-    # Fall back to file for local development
-    cred = credentials.Certificate("serviceAccountKey.json")
+    raise RuntimeError(
+        "Firebase credentials not configured. Set FIREBASE_CREDENTIALS "
+        f"or add {SERVICE_ACCOUNT_PATH} for local development."
+    )
 
-firebase_admin.initialize_app(cred)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
 db = firestore.client()

@@ -284,7 +284,7 @@ if (document.getElementById('auth-form')) {
         
         const url = isLogin ? '/login' : '/register';
         
-        fetch(url, {
+        apiFetch(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({username: u, password: p})

@@ -1,6 +1,5 @@
 import os
 import calendar
-from fpdf import FPDF
 import io
 import base64
 import secrets
@@ -10,7 +9,29 @@ import csv
 import re
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from werkzeug.exceptions import RequestEntityTooLarge
+
+def load_env_file(path=".env"):
+    if not os.path.exists(path):
+        return
+
+    with open(path, encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+load_env_file()
+
 from database import Database
+
+try:
+    from fpdf import FPDF
+    HAS_FPDF = True
+except ImportError:
+    FPDF = None
+    HAS_FPDF = False
 
 try:
     from PIL import Image, ImageOps
@@ -28,7 +49,9 @@ try:
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
-    print("Warning: Pandas not installed. Excel export will not work.")
+    pd = None
+    import logging
+    logging.warning("Pandas not installed. Excel export will not work.")
 
 if pytesseract:
     # Try multiple common Tesseract installation paths
@@ -369,6 +392,8 @@ def process_recurring_expenses(user_id):
 
 @app.context_processor
 def inject_global_vars():
+    backend_name = db.backend_name()
+    show_backend_badge = os.environ.get("SHOW_BACKEND_BADGE", "1").lower() in {"1", "true", "yes"}
     if "user_id" in session:
         user_id = session["user_id"]
         currency = db.get_settings(user_id)
@@ -378,9 +403,28 @@ def inject_global_vars():
             currency=currency,
             categories=expense_cats,
             income_categories=income_cats,
-            csrf_token=get_csrf_token()
+            csrf_token=get_csrf_token(),
+            backend_name=backend_name,
+            show_backend_badge=show_backend_badge
         )
     return dict(categories=[], income_categories=[], currency="₹", csrf_token=get_csrf_token())
+
+@app.context_processor
+def inject_backend_vars():
+    return dict(
+        backend_name=db.backend_name(),
+        show_backend_badge=os.environ.get("SHOW_BACKEND_BADGE", "1").lower() in {"1", "true", "yes"}
+    )
+
+@app.route("/api/health")
+def health():
+    return jsonify({
+        "success": True,
+        "backend": db.backend_name(),
+        "firebase": db.is_firebase,
+        "pdf_export": HAS_FPDF,
+        "excel_export": HAS_PANDAS
+    })
 
 @app.errorhandler(RequestEntityTooLarge)
 def handle_large_file(_e):
@@ -435,18 +479,20 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        data = request.json
+        if not validate_csrf():
+            return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
+
+        data = request.json or {}
         username = data.get("username")
         password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"success": False, "message": "Username and password are required"}), 400
         
-        print(f"[DEBUG LOGIN] Attempting login for username: '{username}'")
         try:
             user_id = db.login_user(username, password)
-            print(f"[DEBUG LOGIN] Returned user_id: {user_id}")
-        except Exception as e:
-            print(f"[DEBUG LOGIN] Exception in login_user: {e}")
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            app.logger.exception("Login failed")
             user_id = None
             
         if user_id is not None:
@@ -460,9 +506,15 @@ def login():
 
 @app.route("/register", methods=["POST"])
 def register():
-    data = request.json
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
+
+    data = request.json or {}
     username = data.get("username")
     password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"success": False, "message": "Username and password are required"}), 400
     
     if db.register_user(username, password):
         return jsonify({"success": True})
@@ -523,7 +575,8 @@ def upload_receipt(expense_id):
     encoded_string = base64.b64encode(file_bytes).decode('utf-8')
     data_uri = f"data:{file.mimetype};base64,{encoded_string}"
     
-    db.update_expense_receipt(expense_id, session["user_id"], data_uri)
+    if not db.update_expense_receipt(expense_id, session["user_id"], data_uri):
+        return jsonify({"success": False, "message": "Receipt target not found"}), 404
     
     return jsonify({"success": True})
 
@@ -585,7 +638,8 @@ def delete_expense(expense_id):
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
-    db.delete_expense(expense_id, session["user_id"])
+    if not db.delete_expense(expense_id, session["user_id"]):
+        return jsonify({"success": False, "message": "Transaction not found"}), 404
     return jsonify({"success": True})
 
 @app.route("/api/expense/<int:expense_id>", methods=["PUT"])
@@ -612,7 +666,8 @@ def update_expense(expense_id):
     if not date or not category or not name:
         return jsonify({"success": False, "message": "All fields required"}), 400
         
-    db.update_expense(expense_id, user_id, date, amount, category, name, is_recurring)
+    if not db.update_expense(expense_id, user_id, date, amount, category, name, is_recurring):
+        return jsonify({"success": False, "message": "Transaction not found"}), 404
     return jsonify({"success": True})
 
 @app.route("/category/<path:category_name>")
@@ -634,6 +689,8 @@ def category_view(category_name):
 def export_pdf():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    if not HAS_FPDF:
+        return jsonify({"success": False, "message": "PDF export requires fpdf2 to be installed"}), 503
         
     user_id = session["user_id"]
     rows = db.get_all_expenses_for_export(user_id)
@@ -665,6 +722,8 @@ def export_pdf():
 def export_excel():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    if not HAS_PANDAS:
+        return jsonify({"success": False, "message": "Excel export requires pandas and openpyxl to be installed"}), 503
     
     try:
         user_id = session["user_id"]
@@ -809,6 +868,8 @@ def export_json():
 def export_report():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    if not HAS_FPDF:
+        return jsonify({"success": False, "message": "PDF report requires fpdf2 to be installed"}), 503
     
     try:
         user_id = session["user_id"]
@@ -1066,7 +1127,8 @@ if __name__ == "__main__":
     threading.Timer(1.5, open_browser).start()
     
     try:
-        app.run(debug=True, host="0.0.0.0", port=port)
+        debug = os.environ.get("FLASK_DEBUG", "").lower() in {"1", "true", "yes"}
+        app.run(debug=debug, host="0.0.0.0", port=port)
     except Exception as e:
         with open("crash.log", "w") as f:
             f.write("The application crashed while starting. Error:\n\n")

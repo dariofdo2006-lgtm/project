@@ -2,6 +2,8 @@ import os
 import sqlite3
 from werkzeug.security import check_password_hash, generate_password_hash
 
+DISABLE_FIREBASE = os.environ.get("DISABLE_FIREBASE", "").lower() in {"1", "true", "yes"}
+
 try:
     import psycopg2
 except ImportError:
@@ -13,20 +15,29 @@ except ImportError:
     pymongo = None
 
 try:
+    if DISABLE_FIREBASE:
+        raise RuntimeError("Firebase disabled by DISABLE_FIREBASE")
     from firebase_config import db as firestore_db
     from firebase_admin import firestore
     FIREBASE_AVAILABLE = True
-except ImportError:
+except Exception as exc:
     FIREBASE_AVAILABLE = False
     firestore_db = None
     firestore = None
+    FIREBASE_INIT_ERROR = exc
+else:
+    FIREBASE_INIT_ERROR = None
 
-DB_NAME = "budget.db"
+DB_NAME = os.environ.get("SQLITE_DB_NAME", "budget.db")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 MONGO_URI = os.environ.get("MONGO_URI")
+REQUIRE_FIREBASE = os.environ.get("REQUIRE_FIREBASE", "").lower() in {"1", "true", "yes"}
 
 class Database:
     def __init__(self):
+        if REQUIRE_FIREBASE and not FIREBASE_AVAILABLE:
+            raise RuntimeError(f"Firebase is required but unavailable: {FIREBASE_INIT_ERROR!r}")
+
         self.is_firebase = FIREBASE_AVAILABLE
         self.is_mongo = bool(MONGO_URI and pymongo and not self.is_firebase)
         self.is_postgres = bool(DATABASE_URL and psycopg2 and not self.is_mongo and not self.is_firebase)
@@ -46,6 +57,15 @@ class Database:
             self.conn = sqlite3.connect(DB_NAME, check_same_thread=False)
             self.cursor = self.conn.cursor()
             self.create_tables()
+
+    def backend_name(self):
+        if self.is_firebase:
+            return "firebase"
+        if self.is_mongo:
+            return "mongo"
+        if self.is_postgres:
+            return "postgres"
+        return "sqlite"
 
     def get_next_sequence(self, name):
         if self.is_firebase:
@@ -78,6 +98,27 @@ class Database:
         self.db.users.create_index("username", unique=True)
         self.db.custom_categories.create_index([("user_id", 1), ("name", 1), ("cat_type", 1)], unique=True)
         self.db.calculator_data.create_index([("user_id", 1), ("type", 1)], unique=True)
+
+    def _same_user_id(self, left, right):
+        return str(left) == str(right)
+
+    def _firebase_expense_ref_for_user(self, expense_id, user_id):
+        doc_ref = self.db.collection('expenses').document(str(expense_id))
+        doc = doc_ref.get()
+        if not doc.exists:
+            return None
+
+        data = doc.to_dict()
+        if not self._same_user_id(data.get("user_id"), user_id):
+            return None
+
+        return doc_ref
+
+    def _password_matches(self, stored_password, password):
+        try:
+            return check_password_hash(stored_password or "", password or "")
+        except ValueError:
+            return False
 
     def execute(self, query, params=()):
         if self.is_postgres:
@@ -198,43 +239,19 @@ class Database:
             return False
 
     def login_user(self, username, password):
-        print(f"[DEBUG DB] login_user called with username: '{username}'")
         if self.is_firebase:
-            print("[DEBUG DB] Using Firebase logic")
             users = self.db.collection('users').where("username", "==", username).get()
-            print(f"[DEBUG DB] Firebase returned {len(users)} documents")
             if not users:
                 return None
             user = users[0].to_dict()
-            print(f"[DEBUG DB] First user dict: {user}")
             stored_password = user.get("password", "")
-            
-            # Check if password matches (handling potential ValueError if hash is improperly formatted)
-            password_matches = False
-            try:
-                if check_password_hash(stored_password, password):
-                    password_matches = True
-            except ValueError:
-                # If ValueError is thrown, the stored password is not a valid Werkzeug hash.
-                print("[DEBUG DB] ValueError in check_password_hash (probably plaintext password)")
-                pass
                 
             user_id = user.get("id", users[0].id)
             # Try to cast user_id to int if it looks like one, to match sqlite behavior
             if isinstance(user_id, str) and user_id.isdigit():
                 user_id = int(user_id)
 
-            print(f"[DEBUG DB] password_matches: {password_matches}, stored_password == password: {stored_password == password}")
-
-            if password_matches:
-                return user_id
-            
-            if stored_password == password:
-                # If it was plaintext, update it to be hashed for future logins
-                print("[DEBUG DB] Updating plaintext password to hash")
-                self.db.collection('users').document(str(user_id)).update({
-                    "password": generate_password_hash(password)
-                })
+            if self._password_matches(stored_password, password):
                 return user_id
             return None
         elif self.is_mongo:
@@ -242,13 +259,7 @@ class Database:
             if not user:
                 return None
             stored_password = user.get("password", "")
-            if check_password_hash(stored_password, password):
-                return user["id"]
-            if stored_password == password:
-                self.db.users.update_one(
-                    {"id": user["id"]},
-                    {"$set": {"password": generate_password_hash(password)}}
-                )
+            if self._password_matches(stored_password, password):
                 return user["id"]
             return None
 
@@ -257,10 +268,7 @@ class Database:
         if not result:
             return None
         user_id, stored_password = result[0], result[1]
-        if check_password_hash(stored_password, password):
-            return user_id
-        if stored_password == password:
-            self.execute("UPDATE users SET password = ? WHERE id = ?", (generate_password_hash(password), user_id))
+        if self._password_matches(stored_password, password):
             return user_id
         return None
 
@@ -366,16 +374,19 @@ class Database:
 
     def update_expense(self, expense_id, user_id, date, amount, category, name, is_recurring=False):
         if self.is_firebase:
-            self.db.collection('expenses').document(str(expense_id)).update({
+            doc_ref = self._firebase_expense_ref_for_user(expense_id, user_id)
+            if not doc_ref:
+                return False
+            doc_ref.update({
                 "date": date,
                 "amount": amount,
                 "category": category,
                 "name": name,
                 "is_recurring": is_recurring
             })
-            return
+            return True
         elif self.is_mongo:
-            self.db.expenses.update_one(
+            result = self.db.expenses.update_one(
                 {"id": expense_id, "user_id": user_id},
                 {"$set": {
                     "date": date,
@@ -385,20 +396,25 @@ class Database:
                     "is_recurring": is_recurring
                 }}
             )
-            return
+            return result.matched_count > 0
 
         self.execute("UPDATE expenses SET date = ?, amount = ?, category = ?, name = ?, is_recurring = ? WHERE id = ? AND user_id = ?",
                             (date, amount, category, name, is_recurring, expense_id, user_id))
+        return self.cursor.rowcount > 0
 
     def delete_expense(self, expense_id, user_id):
         if self.is_firebase:
-            self.db.collection('expenses').document(str(expense_id)).delete()
-            return
+            doc_ref = self._firebase_expense_ref_for_user(expense_id, user_id)
+            if not doc_ref:
+                return False
+            doc_ref.delete()
+            return True
         elif self.is_mongo:
-            self.db.expenses.delete_one({"id": expense_id, "user_id": user_id})
-            return
+            result = self.db.expenses.delete_one({"id": expense_id, "user_id": user_id})
+            return result.deleted_count > 0
 
         self.execute("DELETE FROM expenses WHERE id = ? AND user_id = ?", (expense_id, user_id))
+        return self.cursor.rowcount > 0
 
     def get_receipt(self, expense_id, user_id):
         if self.is_firebase:
@@ -600,18 +616,22 @@ class Database:
 
     def update_expense_receipt(self, expense_id, user_id, image_path):
         if self.is_firebase:
-            self.db.collection('expenses').document(str(expense_id)).update({
+            doc_ref = self._firebase_expense_ref_for_user(expense_id, user_id)
+            if not doc_ref:
+                return False
+            doc_ref.update({
                 "image_path": image_path
             })
-            return
+            return True
         elif self.is_mongo:
-            self.db.expenses.update_one(
+            result = self.db.expenses.update_one(
                 {"id": expense_id, "user_id": user_id},
                 {"$set": {"image_path": image_path}}
             )
-            return
+            return result.matched_count > 0
 
         self.execute("UPDATE expenses SET image_path = ? WHERE id = ? AND user_id = ?", (image_path, expense_id, user_id))
+        return self.cursor.rowcount > 0
 
     def get_all_expenses_for_export(self, user_id):
         if self.is_firebase:

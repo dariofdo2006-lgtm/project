@@ -88,6 +88,20 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     color: var(--text-muted);
 }
 
+.settings-category-box {
+    align-items: center;
+    background: #0f0f12;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    box-sizing: border-box;
+    color: var(--text-light);
+    display: flex;
+    flex: 1;
+    font-size: 14px;
+    height: 42px;
+    padding: 0 12px;
+}
+
 /* --- SETTINGS PAGE SPECIFIC STYLING --- */
 #new-expense-cat,
 #new-income-cat {
