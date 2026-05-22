@@ -33,7 +33,7 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
     line-height: 1.5;
 }
 
@@ -45,7 +45,7 @@ button {
 }
 
 h1, h2, h3, .topbar-title, .cal-title, .summary-title {
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     font-weight: 600;
     line-height: 1.2;
 }
@@ -71,6 +71,13 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     font-weight: 700;
     margin-bottom: 40px;
     color: var(--text-light);
+}
+
+.login-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 34px;
 }
 
 .input-group {
@@ -444,6 +451,30 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
+}
+
+.brand-name {
+    color: var(--text-light);
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
 }
 
 .nav-item {
