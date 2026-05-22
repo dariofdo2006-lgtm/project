@@ -889,6 +889,18 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     flex-wrap: wrap;
 }
 
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 998;
+    backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active {
+    display: block;
+}
+
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
     .mobile-only {
@@ -918,7 +930,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     .dashboard-panes {
         flex-direction: column;
         overflow-y: visible;
-        padding: 16px;
+        padding: 12px;
         gap: 16px;
     }
 
@@ -927,17 +939,18 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
         width: 100%;
         min-width: unset;
         height: auto;
-        padding: 24px 20px;
+        padding: 16px 12px;
     }
 
     .topbar {
-        padding: 0 16px;
+        padding: 16px;
         flex-wrap: wrap;
+        height: auto;
     }
     
     .topbar-search {
         width: 100%;
-        margin-top: 10px;
+        margin-top: 12px;
     }
     
     .topbar-search form {
@@ -958,7 +971,41 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     }
     .side-panel.active { right: 0; }
     
-    .cal-title { font-size: 20px; }
+    .cal-title { font-size: 18px; }
+    
+    .calendar-day {
+        min-height: 50px;
+        padding: 6px;
+    }
+
+    .calendar-day-num {
+        font-size: 13px;
+    }
+
+    .calendar-day-header {
+        font-size: 11px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        padding: 10px 16px;
+    }
+    
+    .summary-header {
+        padding: 20px 16px 10px;
+    }
+    
+    .transactions {
+        padding: 10px 16px;
+    }
+    
+    .add-btn {
+        margin: 10px 16px 20px;
+    }
+
+    .transaction-card {
+        padding: 12px;
+    }
 }
 
 /* --- CALCULATOR PAGE --- */

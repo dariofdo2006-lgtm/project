@@ -31,6 +31,8 @@ function apiFetch(url, options = {}) {
 
 function toggleMobileSidebar() {
     document.querySelector('.sidebar').classList.toggle('active');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (overlay) overlay.classList.toggle('active');
 }
 
 // Ensure collapsible menus stay open if a child is active
