@@ -25,70 +25,70 @@
 <div class="dashboard-panes">
     <!-- Calendar Pane -->
     <div class="calendar-panel">
-        <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h2 class="cal-title" style="margin:0; font-size: 24px;">{{ month_name }} {{ year }}</h2>
+        <div class="cal-header">
+            <h2 class="cal-title">{{ month_name }} {{ year }}</h2>
             <div>
                 {% set prev_month = month - 1 if month > 1 else 12 %}
                 {% set prev_year = year if month > 1 else year - 1 %}
                 {% set next_month = month + 1 if month < 12 else 1 %}
                 {% set next_year = year if month < 12 else year + 1 %}
-                <a href="/?year={{ prev_year }}&month={{ prev_month }}" class="btn-outline" style="text-decoration:none; display:inline-block; padding:8px 16px; border:1px solid var(--border-dark); border-radius:6px; color:var(--text-light); margin-right:10px;">← Prev</a>
-                <a href="/?year={{ next_year }}&month={{ next_month }}" class="btn-outline" style="text-decoration:none; display:inline-block; padding:8px 16px; border:1px solid var(--border-dark); border-radius:6px; color:var(--text-light);">Next →</a>
+                <a href="/?year={{ prev_year }}&month={{ prev_month }}" class="btn-outline" style="margin-right:10px;">← Prev</a>
+                <a href="/?year={{ next_year }}&month={{ next_month }}" class="btn-outline">Next →</a>
             </div>
         </div>
         
-        <div class="calendar-grid" id="calendar-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;">
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Mon</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Tue</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Wed</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Thu</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Fri</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Sat</div>
-            <div class="calendar-day-header" style="text-align:center; color:var(--text-muted); font-weight:600; padding-bottom:10px;">Sun</div>
+        <div class="calendar-grid" id="calendar-grid">
+            <div class="calendar-day-header">Mon</div>
+            <div class="calendar-day-header">Tue</div>
+            <div class="calendar-day-header">Wed</div>
+            <div class="calendar-day-header">Thu</div>
+            <div class="calendar-day-header">Fri</div>
+            <div class="calendar-day-header">Sat</div>
+            <div class="calendar-day-header">Sun</div>
             <!-- JS will inject days here -->
         </div>
     </div>
 
     <!-- Summary & Transactions Pane -->
-    <div class="summary-panel" style="background:var(--panel-dark); border:1px solid var(--border-dark); border-radius:12px; padding:30px;">
-        <div class="summary-header" style="margin-bottom:20px;">
-            <h3 class="summary-title" style="margin:0; font-size:18px; color:var(--brand-blue);">{{ month_name }} Summary</h3>
+    <div class="summary-panel">
+        <div class="summary-header">
+            <h3 class="summary-title" style="color:var(--brand-blue);">{{ month_name }} Summary</h3>
         </div>
         
-        <div class="stats-grid" style="display:flex; flex-direction:column; gap:10px;">
-            <div class="stat-row" style="display:flex; justify-content:space-between;">
+        <div class="stats-grid">
+            <div class="stat-row">
                 <span class="stat-label">Income</span>
-                <span class="stat-val text-success" style="color:#10b981; font-weight:bold;">{{ currency }}{{ "%.2f"|format(total_income) }}</span>
+                <span class="stat-val text-success">{{ currency }}{{ "%.2f"|format(total_income) }}</span>
             </div>
-            <div class="stat-row" style="display:flex; justify-content:space-between;">
+            <div class="stat-row">
                 <span class="stat-label">Expenses</span>
-                <span class="stat-val text-danger" style="color:#ef4444; font-weight:bold;">{{ currency }}{{ "%.2f"|format(total_expenses) }}</span>
+                <span class="stat-val text-danger">{{ currency }}{{ "%.2f"|format(total_expenses) }}</span>
             </div>
-            <div class="stat-row" style="display:flex; justify-content:space-between; margin-top: 5px; padding-top: 10px; border-top: 1px dashed var(--border-focus);">
+            <div class="stat-row" style="margin-top: 5px; padding-top: 10px; border-top: 1px dashed var(--border-focus);">
                 <span class="stat-label">Net</span>
-                <span class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}" style="font-weight:bold; color:{% if cash_diff >= 0 %}#10b981{% else %}#ef4444{% endif %};">{{ currency }}{{ "%.2f"|format(cash_diff) }}</span>
+                <span class="stat-val {% if cash_diff >= 0 %}text-success{% else %}text-danger{% endif %}">{{ currency }}{{ "%.2f"|format(cash_diff) }}</span>
             </div>
         </div>
         
-        <div class="divider" style="height:1px; background:var(--border-dark); margin:30px 0;"></div>
+        <div class="divider"></div>
         
-        <h3 style="margin-top:0; margin-bottom:20px; font-size:16px;">Transactions for {{ selected_date }}</h3>
-        <div class="transactions" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto; padding-right:10px;">
+        <div class="transactions">
+            <h3 style="margin-top:0; margin-bottom:15px; font-size:16px;">Transactions for {{ selected_date }}</h3>
             {% for e in daily_expenses %}
-            <div class="transaction-card" style="background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:8px; padding:15px;">
-                <div class="tx-top" style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span class="tx-name" style="font-weight:600;">{{ e[4] }}</span>
-                    <span class="tx-amount {% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}" style="font-weight:bold; color:{% if e[3] in income_categories %}#10b981{% else %}#ef4444{% endif %};">
+            <div class="transaction-card">
+                <div class="tx-top">
+                    <span class="tx-name">{{ e[4] }}</span>
+                    <span class="tx-amount {% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}">
                         {% if e[3] in income_categories %}+{% else %}-{% endif %}{{ currency }}{{ "%.2f"|format(e[2]) }}
                     </span>
                 </div>
-                <div class="tx-bot" style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:13px;">
+                <div class="tx-bot">
                     <span>{{ e[3]|title }}</span>
                     <div style="display:flex; gap:10px;">
                         {% if e[5] %}
                         <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none;">Receipt</a>
                         {% endif %}
-                        <span style="cursor:pointer; color:var(--text-muted);" onclick="openEditModal({{ e[0] }}, '{{ selected_date }}', {{ e[2] }}, '{{ e[3] }}', '{{ e[4] }}', '{{ e[6]|default(0) }}')">Edit</span>
+                        <span style="cursor:pointer; color:var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--brand-blue)'" onmouseout="this.style.color='var(--text-muted)'" onclick="openEditModal({{ e[0] }}, '{{ selected_date }}', {{ e[2] }}, '{{ e[3] }}', '{{ e[4] }}', '{{ e[6]|default(0) }}')">Edit</span>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,7 @@
             {% endif %}
         </div>
         
-        <button class="btn-primary" onclick="openModal('{{ selected_date }}')" style="margin-top: 20px;">+ Add Transaction</button>
+        <div class="add-btn" onclick="openModal('{{ selected_date }}')">+ Add Transaction</div>
     </div>
 </div>
 {% endblock %}
