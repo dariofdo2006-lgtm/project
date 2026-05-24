@@ -833,9 +833,9 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 }
 
 #search-input.unified-input {
-    height: 44px !important;
-    width: 250px !important;
-    padding: 0 14px !important;
+    height: 44px;
+    width: 250px;
+    padding: 0 14px;
 }
 
 .topbar-search form {

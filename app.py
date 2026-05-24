@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import json
 import csv
 import re
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, g
 from werkzeug.exceptions import RequestEntityTooLarge
 
 def load_env_file(path=".env"):
@@ -390,15 +390,27 @@ def process_recurring_expenses(user_id):
                 import logging
                 logging.warning(f"Recurring expense copy skipped: {e}")
 
+def get_cached_categories(user_id, cat_type=None):
+    if not hasattr(g, 'categories_cache'):
+        g.categories_cache = db.get_categories(user_id)
+    if cat_type:
+        return [c[0] for c in g.categories_cache if c[1] == cat_type]
+    return g.categories_cache
+
+def get_cached_settings(user_id):
+    if not hasattr(g, 'settings_cache'):
+        g.settings_cache = db.get_settings(user_id)
+    return g.settings_cache
+
 @app.context_processor
 def inject_global_vars():
     backend_name = db.backend_name()
     show_backend_badge = os.environ.get("SHOW_BACKEND_BADGE", "1").lower() in {"1", "true", "yes"}
     if "user_id" in session:
         user_id = session["user_id"]
-        currency = db.get_settings(user_id)
-        expense_cats = db.get_categories(user_id, 'expense')
-        income_cats = db.get_categories(user_id, 'income')
+        currency = get_cached_settings(user_id)
+        expense_cats = get_cached_categories(user_id, 'expense')
+        income_cats = get_cached_categories(user_id, 'income')
         return dict(
             currency=currency,
             categories=expense_cats,
@@ -450,7 +462,7 @@ def index():
     total_expenses = 0.0
     
     # Process monthly numbers
-    income_categories = db.get_categories(user_id, 'income')
+    income_categories = get_cached_categories(user_id, 'income')
     for row in raw_expenses:
         _, amount, category = row
         if category in income_categories:
@@ -1008,7 +1020,7 @@ def yearly_view():
     monthly_incomes = []
     monthly_expenses = []
     
-    income_categories = db.get_categories(user_id, 'income')
+    income_categories = get_cached_categories(user_id, 'income')
     for m in range(1, 13):
         raw_expenses = db.get_expenses_by_month(user_id, year, m)
         m_inc = 0.0
