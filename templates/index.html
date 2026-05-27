@@ -60,7 +60,7 @@
         font-size: 12px;
         transition: transform 0.25s ease;
     }
-    .summary-panel.expanded .tx-chevron {
+    .tx-section.expanded .tx-chevron {
         transform: rotate(180deg);
     }
 
@@ -74,7 +74,7 @@
         margin-bottom: 12px;
         transition: opacity 0.25s ease, transform 0.25s ease, margin 0.25s ease;
     }
-    .summary-panel.expanded .tx-compact-summary {
+    .tx-section.expanded .tx-compact-summary {
         opacity: 0;
         transform: translateY(-4px);
         margin-bottom: 0;
@@ -96,14 +96,14 @@
         max-height: 1000px;
         transition: max-height 0.3s ease, opacity 0.25s ease;
     }
-    .summary-panel.collapsed .transactions {
+    .tx-section.collapsed .transactions {
         opacity: 0;
         max-height: 0;
         overflow: hidden;
         margin-bottom: 0;
         pointer-events: none;
     }
-    .summary-panel.collapsed .tx-list-title {
+    .tx-section.collapsed .tx-list-title {
         display: none;
     }
 
@@ -146,7 +146,7 @@
     </div>
 
     <!-- Summary & Transactions Pane -->
-    <div class="summary-panel collapsed" id="summary-panel">
+    <div class="summary-panel" id="summary-panel">
         <div class="summary-header">
             <h3 class="summary-title" style="color:var(--brand-blue);">{{ month_name }} Summary</h3>
         </div>
@@ -168,7 +168,7 @@
         
         <div class="divider"></div>
         
-        <div class="tx-section">
+        <div class="tx-section collapsed" id="tx-section">
             <div class="tx-section-head">
                 <h3 style="margin:0; font-size:16px;">Transactions</h3>
                 <button type="button" class="tx-toggle-btn" id="tx-toggle-btn" aria-expanded="false" aria-controls="tx-list-wrap" onclick="toggleTransactions()">
@@ -313,14 +313,14 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function toggleTransactions() {
-    const panel = document.getElementById('summary-panel');
+    const section = document.getElementById('tx-section');
     const label = document.getElementById('tx-toggle-label');
     const button = document.getElementById('tx-toggle-btn');
-    if (!panel || !label) return;
+    if (!section || !label) return;
 
-    const expand = panel.classList.contains('collapsed');
-    panel.classList.toggle('collapsed', !expand);
-    panel.classList.toggle('expanded', expand);
+    const expand = section.classList.contains('collapsed');
+    section.classList.toggle('collapsed', !expand);
+    section.classList.toggle('expanded', expand);
     label.textContent = expand ? 'Hide Transactions' : 'View Transactions';
     if (button) button.setAttribute('aria-expanded', expand ? 'true' : 'false');
 }
