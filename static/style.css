@@ -521,6 +521,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
     scroll-behavior: smooth;
     background-color: var(--bg-color);
     /* Prevent horizontal overflow */
@@ -563,6 +564,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .dashboard-panes {
     display: flex;
     flex: 1;
+    min-height: 0;
     padding: 24px;
     gap: 24px;
     overflow: hidden;
@@ -590,6 +592,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     border: 1px solid var(--border-dark);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
@@ -637,7 +640,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .text-success { color: var(--success); }
 .text-danger { color: var(--danger); }
 
-.transactions { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 30px; margin-bottom: 20px; }
+.transactions { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px 30px; margin-bottom: 20px; }
 
 .transaction-card {
     background: var(--bg-dark);
