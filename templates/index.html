@@ -9,8 +9,15 @@
     window.SELECTED_DATE = "{{ selected_date }}";
 </script>
 <style>
+    .calendar-panel { min-height: 0; }
+    .calendar-grid {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+        grid-template-rows: auto repeat(6, minmax(0, 1fr));
+    }
     /* Add calendar day hover/active styling to match original */
-    .calendar-day { cursor: pointer; transition: 0.2s; padding: 10px; border: 1px solid var(--border-dark); border-radius: 8px; min-height: 80px; display: flex; flex-direction: column; }
+    .calendar-day { cursor: pointer; transition: 0.2s; padding: 10px; border: 1px solid var(--border-dark); border-radius: 8px; min-height: 0; display: flex; flex-direction: column; }
     .calendar-day:hover { background: var(--border-dark); }
     .calendar-day.selected { border-color: var(--brand-blue); background: rgba(59, 130, 246, 0.1); }
     .calendar-day.today { border-bottom: 3px solid var(--brand-blue); }
