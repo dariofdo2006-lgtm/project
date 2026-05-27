@@ -654,7 +654,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 
 .tx-top { display: flex; justify-content: space-between; margin-bottom: 6px; gap: 10px; }
 .tx-name { font-weight: 600; font-size: 14px; color: var(--text-light); word-break: break-word; }
-.tx-amount { font-weight: 600; color: var(--danger); white-space: nowrap; }
+.tx-amount { font-weight: 600; white-space: nowrap; }
 .tx-bot { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
 .add-btn {
