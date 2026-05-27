@@ -29,20 +29,10 @@ function apiFetch(url, options = {}) {
     return fetch(url, opts);
 }
 
-let savedScrollY = 0;
-
-function lockBodyScroll() {
-    savedScrollY = window.scrollY || window.pageYOffset || 0;
-    document.body.classList.add('sidebar-open');
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-}
-
-function unlockBodyScroll() {
+function resetMobileMenuState() {
     document.body.classList.remove('sidebar-open');
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
-    window.scrollTo(0, savedScrollY || 0);
 }
 
 function toggleMobileSidebar() {
@@ -55,9 +45,11 @@ function toggleMobileSidebar() {
     if (overlay) overlay.classList.toggle('active');
 
     if (isOpening) {
-        lockBodyScroll();
+        document.body.classList.add('sidebar-open');
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
     } else {
-        unlockBodyScroll();
+        resetMobileMenuState();
     }
 }
 
@@ -97,20 +89,23 @@ document.addEventListener("DOMContentLoaded", function() {
             if (sidebar && sidebar.classList.contains('active')) {
                 sidebar.classList.remove('active');
                 if (overlay) overlay.classList.remove('active');
-                unlockBodyScroll();
+                resetMobileMenuState();
             }
         });
     });
 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 768) {
-            unlockBodyScroll();
+            resetMobileMenuState();
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
             if (sidebar) sidebar.classList.remove('active');
             if (overlay) overlay.classList.remove('active');
         }
     });
+
+    // Safety: avoid sticky non-scrollable page after refresh/navigation.
+    resetMobileMenuState();
 });
 
 function openModal(dateStr) {
