@@ -564,6 +564,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .dashboard-panes {
     display: flex;
     flex: 1;
+    height: calc(100vh - 70px);
     min-height: 0;
     padding: 24px;
     gap: 24px;
@@ -586,6 +587,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .summary-panel {
     flex: 1;
     min-width: 400px;
+    max-height: 100%;
     min-height: 0;
     background-color: var(--panel-dark);
     border-radius: 16px;
@@ -933,6 +935,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 
     .dashboard-panes {
         flex-direction: column;
+        height: auto;
         overflow-y: visible;
         padding: 12px;
         gap: 16px;
