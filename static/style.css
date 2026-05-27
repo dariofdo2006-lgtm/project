@@ -584,6 +584,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .summary-panel {
     flex: 1;
     min-width: 400px;
+    min-height: 0;
     background-color: var(--panel-dark);
     border-radius: 16px;
     border: 1px solid var(--border-dark);
@@ -636,7 +637,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .text-success { color: var(--success); }
 .text-danger { color: var(--danger); }
 
-.transactions { flex: 1; overflow-y: auto; padding: 10px 30px; margin-bottom: 20px; }
+.transactions { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 30px; margin-bottom: 20px; }
 
 .transaction-card {
     background: var(--bg-dark);
