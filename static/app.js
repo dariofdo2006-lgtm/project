@@ -29,10 +29,36 @@ function apiFetch(url, options = {}) {
     return fetch(url, opts);
 }
 
+let savedScrollY = 0;
+
+function lockBodyScroll() {
+    savedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.classList.add('sidebar-open');
+    document.body.style.top = `-${savedScrollY}px`;
+}
+
+function unlockBodyScroll() {
+    document.body.classList.remove('sidebar-open');
+    const top = document.body.style.top;
+    document.body.style.top = '';
+    const y = Math.abs(parseInt(top || '0', 10)) || savedScrollY || 0;
+    window.scrollTo(0, y);
+}
+
 function toggleMobileSidebar() {
-    document.querySelector('.sidebar').classList.toggle('active');
+    const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
+    if (!sidebar) return;
+
+    const isOpening = !sidebar.classList.contains('active');
+    sidebar.classList.toggle('active');
     if (overlay) overlay.classList.toggle('active');
+
+    if (isOpening) {
+        lockBodyScroll();
+    } else {
+        unlockBodyScroll();
+    }
 }
 
 // Ensure collapsible menus stay open if a child is active
@@ -62,6 +88,29 @@ document.addEventListener("DOMContentLoaded", function() {
             sessionStorage.setItem('settingsTipShown', 'true');
         }
     }
+
+    // Close mobile sidebar on navigation tap and restore body scroll.
+    document.querySelectorAll('.sidebar .nav-item, .sidebar .nav-sub-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (sidebar && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                unlockBodyScroll();
+            }
+        });
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            unlockBodyScroll();
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (sidebar) sidebar.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+        }
+    });
 });
 
 function openModal(dateStr) {

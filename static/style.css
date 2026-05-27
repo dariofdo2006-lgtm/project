@@ -44,6 +44,12 @@ body {
     max-width: 100%;
 }
 
+body.sidebar-open {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+}
+
 input,
 select,
 textarea,
