@@ -358,6 +358,30 @@ class Database:
         self.execute(query, (user_id, date))
         return self.cursor.fetchall()
 
+    def get_expenses_by_month_detailed(self, user_id, year, month):
+        month_str = f"{year:04d}-{month:02d}"
+        if self.is_firebase:
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
+            expenses = [doc.to_dict() for doc in docs if doc.to_dict().get('date', '').startswith(month_str)]
+            expenses.sort(key=lambda x: x.get('date', ''), reverse=True)
+            return [
+                (e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False))
+                for e in expenses
+            ]
+        elif self.is_mongo:
+            expenses = self.db.expenses.find({
+                "user_id": user_id,
+                "date": {"$regex": f"^{month_str}"}
+            }).sort("date", pymongo.DESCENDING)
+            return [
+                (e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False))
+                for e in expenses
+            ]
+
+        query = "SELECT id, date, amount, category, name, CASE WHEN image_path IS NOT NULL AND image_path != '' THEN 1 ELSE 0 END as has_image, is_recurring FROM expenses WHERE user_id = ? AND date LIKE ? ORDER BY date DESC, id DESC"
+        self.execute(query, (user_id, f"{month_str}%"))
+        return self.cursor.fetchall()
+
     def get_expenses_by_category(self, user_id, category):
         if self.is_firebase:
             docs = self.db.collection('expenses').where("user_id", "==", user_id).where("category", "==", category).stream()

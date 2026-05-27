@@ -73,8 +73,8 @@
         <div class="divider"></div>
         
         <div class="transactions">
-            <h3 style="margin-top:0; margin-bottom:15px; font-size:16px;">Transactions for {{ selected_date }}</h3>
-            {% for e in daily_expenses %}
+            <h3 style="margin-top:0; margin-bottom:15px; font-size:16px;">Transactions for {{ month_name }} {{ year }}</h3>
+            {% for e in monthly_expenses %}
             <div class="transaction-card">
                 <div class="tx-top">
                     <span class="tx-name">{{ e[4] }}</span>
@@ -83,18 +83,18 @@
                     </span>
                 </div>
                 <div class="tx-bot">
-                    <span>{{ e[3]|title }}</span>
+                    <span>{{ e[1] }} | {{ e[3]|title }}</span>
                     <div style="display:flex; gap:10px;">
                         {% if e[5] %}
                         <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none;">Receipt</a>
                         {% endif %}
-                        <span style="cursor:pointer; color:var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--brand-blue)'" onmouseout="this.style.color='var(--text-muted)'" onclick="openEditModal({{ e[0] }}, '{{ selected_date }}', {{ e[2] }}, '{{ e[3] }}', '{{ e[4] }}', '{{ e[6]|default(0) }}')">Edit</span>
+                        <span style="cursor:pointer; color:var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--brand-blue)'" onmouseout="this.style.color='var(--text-muted)'" onclick="openEditModal({{ e[0] }}, '{{ e[1] }}', {{ e[2] }}, '{{ e[3] }}', '{{ e[4] }}', '{{ e[6]|default(0) }}')">Edit</span>
                     </div>
                 </div>
             </div>
             {% endfor %}
-            {% if not daily_expenses %}
-            <div style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:20px;">No transactions for this day.</div>
+            {% if not monthly_expenses %}
+            <div style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:20px;">No transactions for this month.</div>
             {% endif %}
         </div>
         

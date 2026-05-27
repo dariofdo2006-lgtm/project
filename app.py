@@ -472,8 +472,8 @@ def index():
             
     cash_diff = total_income - total_expenses
     
-    # Get daily specific expenses
-    daily_expenses = db.get_expenses_by_date(user_id, selected_date)
+    # Get all transactions for the current month (for right-side list)
+    monthly_expenses = db.get_expenses_by_month_detailed(user_id, year, month)
     
     return render_template(
         "index.html",
@@ -484,7 +484,7 @@ def index():
         total_income=total_income,
         total_expenses=total_expenses,
         cash_diff=cash_diff,
-        daily_expenses=daily_expenses,
+        monthly_expenses=monthly_expenses,
         active_view='home'
     )
 
