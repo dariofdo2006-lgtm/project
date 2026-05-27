@@ -77,13 +77,13 @@
             {% for e in monthly_expenses %}
             <div class="transaction-card">
                 <div class="tx-top">
-                    <span class="tx-name">{{ e[4] }}</span>
+                    <span class="tx-name {% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}">{{ e[4] }}</span>
                     <span class="tx-amount {% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}">
                         {% if e[3] in income_categories %}+{% else %}-{% endif %}{{ currency }}{{ "%.2f"|format(e[2]) }}
                     </span>
                 </div>
                 <div class="tx-bot">
-                    <span>{{ e[1] }} | {{ e[3]|title }}</span>
+                    <span class="{% if e[3] in income_categories %}text-success{% else %}text-danger{% endif %}">{{ e[1] }} | {{ e[3]|title }}</span>
                     <div style="display:flex; gap:10px;">
                         {% if e[5] %}
                         <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none;">Receipt</a>
