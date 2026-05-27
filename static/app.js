@@ -34,15 +34,15 @@ let savedScrollY = 0;
 function lockBodyScroll() {
     savedScrollY = window.scrollY || window.pageYOffset || 0;
     document.body.classList.add('sidebar-open');
-    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 }
 
 function unlockBodyScroll() {
     document.body.classList.remove('sidebar-open');
-    const top = document.body.style.top;
-    document.body.style.top = '';
-    const y = Math.abs(parseInt(top || '0', 10)) || savedScrollY || 0;
-    window.scrollTo(0, y);
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    window.scrollTo(0, savedScrollY || 0);
 }
 
 function toggleMobileSidebar() {
