@@ -48,6 +48,11 @@ body.sidebar-open {
     overflow: hidden;
 }
 
+body.sidebar-open {
+    position: fixed;
+    width: 100%;
+}
+
 input,
 select,
 textarea,
@@ -448,6 +453,8 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .sidebar-header {
@@ -970,10 +977,19 @@ button,
         z-index: 999;
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
 
     .sidebar.active {
         left: 0;
+    }
+
+    .dashboard-layout.sidebar-active .main-content {
+        filter: blur(2px);
+        opacity: 0.7;
+        pointer-events: none;
     }
 
     .dashboard-panes {

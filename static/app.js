@@ -30,9 +30,21 @@ function apiFetch(url, options = {}) {
 }
 
 function resetMobileMenuState() {
+    const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
     document.body.classList.remove('sidebar-open');
     document.body.style.overflow = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
     document.documentElement.style.overflow = '';
+    delete document.body.dataset.scrollY;
+
+    const dashboardLayout = document.querySelector('.dashboard-layout');
+    if (dashboardLayout) dashboardLayout.classList.remove('sidebar-active');
+
+    if (scrollY) {
+        window.scrollTo(0, scrollY);
+    }
 }
 
 function toggleMobileSidebar() {
@@ -45,9 +57,16 @@ function toggleMobileSidebar() {
     if (overlay) overlay.classList.toggle('active');
 
     if (isOpening) {
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.dataset.scrollY = String(scrollY);
         document.body.classList.add('sidebar-open');
         document.body.style.overflow = 'hidden';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
         document.documentElement.style.overflow = 'hidden';
+        const dashboardLayout = document.querySelector('.dashboard-layout');
+        if (dashboardLayout) dashboardLayout.classList.add('sidebar-active');
     } else {
         resetMobileMenuState();
     }
