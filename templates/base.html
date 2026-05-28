@@ -23,6 +23,7 @@
                 </a>
             </div>
             
+            <div class="sidebar-menu">
             <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-text">Home</span>
@@ -117,6 +118,7 @@
                 <span class="nav-icon">🚪</span>
                 <span class="nav-text">Sign Out</span>
             </a>
+            </div>
         </aside>
 
         <!-- Main Workspace -->
@@ -145,3 +147,4 @@
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
+

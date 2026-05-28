@@ -48,11 +48,6 @@ body.sidebar-open {
     overflow: hidden;
 }
 
-body.sidebar-open {
-    position: fixed;
-    width: 100%;
-}
-
 input,
 select,
 textarea,
@@ -455,6 +450,13 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .sidebar-header {
