@@ -826,7 +826,11 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 
 /* Sidebar Collapsible Styles */
 .collapsible-header {
+    background: transparent;
+    border: none;
+    width: 100%;
     justify-content: space-between;
+    text-align: left;
 }
 .chev {
     color: var(--text-muted);

@@ -84,8 +84,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Close mobile sidebar on navigation tap and restore body scroll.
-    document.querySelectorAll('.sidebar .nav-item, .sidebar .nav-sub-item').forEach((item) => {
+    // Close mobile sidebar only when a real navigation link is clicked.
+    document.querySelectorAll('.sidebar a.nav-item, .sidebar a.nav-sub-item').forEach((item) => {
         item.addEventListener('click', () => {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');

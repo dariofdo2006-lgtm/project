@@ -14,7 +14,6 @@
 <body>
     <div class="dashboard-layout">
         <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="brand-lockup" aria-label="SpendWise home">
@@ -22,113 +21,108 @@
                     <span class="brand-name">SpendWise</span>
                 </a>
             </div>
-            
+
             <div class="sidebar-menu">
-            <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">Home</span>
-            </a>
-            
-            <!-- Expenses Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('expenses-sub')">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text">Expenses</span>
-                <span class="chev" id="expenses-chev">›</span>
-            </div>
-            <div class="sub-nav" id="expenses-sub">
-                {% for cat in categories %}
-                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
-                    <span class="nav-text">{{ cat }}</span>
+                <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
+                    <span class="nav-icon">H</span>
+                    <span class="nav-text">Home</span>
                 </a>
-                {% endfor %}
-            </div>
 
-            <!-- Income Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('income-sub')">
-                <span class="nav-icon">📥</span>
-                <span class="nav-text">Income</span>
-                <span class="chev" id="income-chev">›</span>
-            </div>
-            <div class="sub-nav" id="income-sub">
-                {% for cat in income_categories %}
-                <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
-                    <span class="nav-text">{{ cat }}</span>
-                </a>
-                {% endfor %}
-            </div>
+                <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('expenses-sub')">
+                    <span class="nav-icon">$</span>
+                    <span class="nav-text">Expenses</span>
+                    <span class="chev" id="expenses-chev">></span>
+                </button>
+                <div class="sub-nav" id="expenses-sub">
+                    {% for cat in categories %}
+                    <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
+                        <span class="nav-text">{{ cat }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
 
-            <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">
-                <span class="nav-icon">📊</span>
-                <span class="nav-text">Yearly Report</span>
-            </a>
+                <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('income-sub')">
+                    <span class="nav-icon">I</span>
+                    <span class="nav-text">Income</span>
+                    <span class="chev" id="income-chev">></span>
+                </button>
+                <div class="sub-nav" id="income-sub">
+                    {% for cat in income_categories %}
+                    <a href="/category/{{ cat|urlencode }}" class="nav-sub-item {% if active_view == cat %}active{% endif %}">
+                        <span class="nav-text">{{ cat }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
 
-            <!-- Calculator Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('calc-sub')">
-                <span class="nav-icon">🧮</span>
-                <span class="nav-text">Calculator</span>
-                <span class="chev" id="calc-chev">›</span>
-            </div>
-            <div class="sub-nav" id="calc-sub">
-                <a href="/calculator?type=standard" class="nav-sub-item {% if active_view == 'calculator_standard' %}active{% endif %}">
-                    <span class="nav-text">Budget Guide</span>
+                <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">
+                    <span class="nav-icon">Y</span>
+                    <span class="nav-text">Yearly Report</span>
                 </a>
-                <a href="/calculator?type=budget" class="nav-sub-item {% if active_view == 'calculator_budget' %}active{% endif %}">
-                    <span class="nav-text">50/30/20 Budget</span>
-                </a>
-                <a href="/calculator?type=envelope" class="nav-sub-item {% if active_view == 'calculator_envelope' %}active{% endif %}">
-                    <span class="nav-text">Envelope Budget</span>
-                </a>
-                <a href="/calculator?type=zerobased" class="nav-sub-item {% if active_view == 'calculator_zerobased' %}active{% endif %}">
-                    <span class="nav-text">Zero-Based Budget</span>
-                </a>
-            </div>
 
-            <!-- Spacer -->
-            <div style="flex: 1;"></div>
-            
-            <!-- Export Collapsible -->
-            <div class="nav-item collapsible-header" onclick="toggleSidebar('export-sub')">
-                <span class="nav-icon">📥</span>
-                <span class="nav-text">Export</span>
-                <span class="chev" id="export-chev">›</span>
-            </div>
-            <div class="sub-nav" id="export-sub">
-                <a href="/api/export" class="nav-sub-item" target="_blank">
-                    <span class="nav-text">📄 PDF Export</span>
+                <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('calc-sub')">
+                    <span class="nav-icon">C</span>
+                    <span class="nav-text">Calculator</span>
+                    <span class="chev" id="calc-chev">></span>
+                </button>
+                <div class="sub-nav" id="calc-sub">
+                    <a href="/calculator?type=standard" class="nav-sub-item {% if active_view == 'calculator_standard' %}active{% endif %}">
+                        <span class="nav-text">Budget Guide</span>
+                    </a>
+                    <a href="/calculator?type=budget" class="nav-sub-item {% if active_view == 'calculator_budget' %}active{% endif %}">
+                        <span class="nav-text">50/30/20 Budget</span>
+                    </a>
+                    <a href="/calculator?type=envelope" class="nav-sub-item {% if active_view == 'calculator_envelope' %}active{% endif %}">
+                        <span class="nav-text">Envelope Budget</span>
+                    </a>
+                    <a href="/calculator?type=zerobased" class="nav-sub-item {% if active_view == 'calculator_zerobased' %}active{% endif %}">
+                        <span class="nav-text">Zero-Based Budget</span>
+                    </a>
+                </div>
+
+                <div style="flex: 1;"></div>
+
+                <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('export-sub')">
+                    <span class="nav-icon">E</span>
+                    <span class="nav-text">Export</span>
+                    <span class="chev" id="export-chev">></span>
+                </button>
+                <div class="sub-nav" id="export-sub">
+                    <a href="/api/export" class="nav-sub-item" target="_blank">
+                        <span class="nav-text">PDF Export</span>
+                    </a>
+                    <a href="/api/export/excel" class="nav-sub-item" target="_blank">
+                        <span class="nav-text">Excel Export</span>
+                    </a>
+                    <a href="/api/export/csv" class="nav-sub-item" target="_blank">
+                        <span class="nav-text">CSV Export</span>
+                    </a>
+                    <a href="/api/export/json" class="nav-sub-item" target="_blank">
+                        <span class="nav-text">JSON Backup</span>
+                    </a>
+                    <a href="/api/export/report" class="nav-sub-item" target="_blank">
+                        <span class="nav-text">Analysis Report</span>
+                    </a>
+                </div>
+
+                <a href="/settings" class="nav-item {% if active_view == 'settings' %}active{% endif %}">
+                    <span class="nav-icon">S</span>
+                    <span class="nav-text">Settings</span>
                 </a>
-                <a href="/api/export/excel" class="nav-sub-item" target="_blank">
-                    <span class="nav-text">📊 Excel Export</span>
+
+                <a href="/logout" class="nav-item" onclick="sessionStorage.removeItem('settingsTipShown');">
+                    <span class="nav-icon">O</span>
+                    <span class="nav-text">Sign Out</span>
                 </a>
-                <a href="/api/export/csv" class="nav-sub-item" target="_blank">
-                    <span class="nav-text">📋 CSV Export</span>
-                </a>
-                <a href="/api/export/json" class="nav-sub-item" target="_blank">
-                    <span class="nav-text">🗂️ JSON Backup</span>
-                </a>
-                <a href="/api/export/report" class="nav-sub-item" target="_blank">
-                    <span class="nav-text">📈 Analysis Report</span>
-                </a>
-            </div>
-            <a href="/settings" class="nav-item {% if active_view == 'settings' %}active{% endif %}">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-text">Settings</span>
-            </a>
-            
-            <a href="/logout" class="nav-item" onclick="sessionStorage.removeItem('settingsTipShown');">
-                <span class="nav-icon">🚪</span>
-                <span class="nav-text">Sign Out</span>
-            </a>
             </div>
         </aside>
 
-        <!-- Main Workspace -->
         <main class="main-content">
             <header class="topbar" style="display: flex; justify-content: space-between; align-items: center; padding: 25px 40px; height: auto; background: var(--panel-dark); border: 1px solid var(--border-dark); border-radius: 16px; margin: 20px 20px 0 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.25); box-sizing: border-box;">
                 <div style="display:flex; align-items:center; gap: 20px;">
-                    <button class="btn-icon mobile-only" onclick="toggleMobileSidebar()" style="font-size: 24px; padding: 0; background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 100%; line-height: 1;">☰</button>
+                    <button class="btn-icon mobile-only" onclick="toggleMobileSidebar()" style="font-size: 24px; padding: 0; background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 100%; line-height: 1;">=</button>
                     <div class="topbar-title" style="font-size: 22px; font-weight: 700; color: white; white-space: nowrap; margin: 0; display: flex; align-items: center; height: 100%; line-height: 1;">{% block topbar_title %}{% endblock %}</div>
                 </div>
-                
+
                 <div class="topbar-search" style="flex: 1; display: flex; justify-content: flex-end; max-width: 450px; margin-left: 20px;">
                     <form action="/search" method="GET" style="display:flex; align-items:center; width: 100%; gap: 15px; margin: 0;">
                         <input id="search-input" type="text" name="q" placeholder="Search transactions..." class="unified-input" style="flex: 1; min-width: 150px; height: 44px; margin: 0; padding: 0 14px; box-sizing: border-box;">
@@ -136,15 +130,13 @@
                     </form>
                 </div>
             </header>
-            
+
             {% block content %}{% endblock %}
         </main>
     </div>
 
-    <!-- Modals if needed by child templates -->
     {% block modals %}{% endblock %}
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
-
