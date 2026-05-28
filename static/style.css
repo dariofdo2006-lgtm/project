@@ -447,9 +447,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overflow: visible;
 }
 
 .sidebar-menu {
@@ -457,6 +455,10 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     flex: 1;
     flex-direction: column;
     min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: 24px;
 }
 
 .sidebar-header {
@@ -975,13 +977,13 @@ button,
         position: fixed;
         top: 0;
         left: -260px;
+        width: 260px;
         height: 100vh;
+        height: 100dvh;
         z-index: 999;
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
+        overflow: visible;
     }
 
     .sidebar.active {
