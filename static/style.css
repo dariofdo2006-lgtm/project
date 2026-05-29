@@ -495,27 +495,48 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 }
 
 .password-field .unified-input {
-    padding-right: 78px !important;
+    padding-right: 48px !important;
 }
 
 .password-toggle {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    border: 1px solid #2a3347;
-    background: #121726;
-    color: #dbeafe;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    height: 30px;
-    min-width: 56px;
+    border: none;
+    background: transparent;
+    color: #7c8cab;
+    border-radius: 6px;
+    height: 24px;
+    width: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    padding: 0;
+    min-height: auto;
 }
 
 .password-toggle:hover {
-    background: #172033;
+    color: #cbd5e1;
+}
+
+.eye-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.eye-closed {
+    display: none;
+}
+
+.password-toggle.is-visible .eye-open {
+    display: none;
+}
+
+.password-toggle.is-visible .eye-closed {
+    display: block;
 }
 
 .switch-mode span {

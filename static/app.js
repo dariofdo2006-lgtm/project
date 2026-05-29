@@ -321,7 +321,7 @@ if (document.getElementById('auth-form')) {
         passwordToggle.addEventListener('click', () => {
             const isHidden = passwordInput.type === 'password';
             passwordInput.type = isHidden ? 'text' : 'password';
-            passwordToggle.innerText = isHidden ? 'Hide' : 'Show';
+            passwordToggle.classList.toggle('is-visible', isHidden);
             passwordToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
             passwordToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
         });
@@ -355,7 +355,7 @@ if (document.getElementById('auth-form')) {
         document.getElementById('password').value = '';
         if (passwordInput) passwordInput.type = 'password';
         if (passwordToggle) {
-            passwordToggle.innerText = 'Show';
+            passwordToggle.classList.remove('is-visible');
             passwordToggle.setAttribute('aria-label', 'Show password');
             passwordToggle.setAttribute('aria-pressed', 'false');
         }
