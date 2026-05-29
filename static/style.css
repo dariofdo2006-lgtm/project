@@ -523,9 +523,9 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 }
 
 .nav-icon {
-    font-size: 22px;
+    font-size: 19px;
     margin-right: 12px;
-    width: 30px;
+    width: 26px;
     text-align: center;
     opacity: 0.9;
     transition: transform 0.2s ease;
@@ -536,7 +536,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 }
 
 .nav-text {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.1px;
 }
