@@ -312,18 +312,53 @@ function deleteCurrentTransaction() {
 // Authentication
 if (document.getElementById('auth-form')) {
     let isLogin = true;
+    const forgotLink = document.getElementById('forgot-link');
+    const formSubtitle = document.getElementById('form-subtitle');
+    const passwordToggle = document.getElementById('password-toggle');
+    const passwordInput = document.getElementById('password');
+
+    if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', () => {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            passwordToggle.innerText = isHidden ? 'Hide' : 'Show';
+            passwordToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            passwordToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+        });
+    }
+
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Password reset is not live yet. Please contact support to recover access.');
+        });
+    }
     
     document.getElementById('switch-btn').addEventListener('click', () => {
         isLogin = !isLogin;
         document.getElementById('form-title').innerText = isLogin ? 'Sign In' : 'Sign Up';
-        document.getElementById('submit-btn').innerText = isLogin ? 'SIGN IN' : 'SIGN UP';
+        document.getElementById('submit-btn').innerText = isLogin ? 'Sign In' : 'Create Account';
         document.getElementById('switch-lbl').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
         document.getElementById('switch-btn').innerText = isLogin ? 'Sign up' : 'Sign in';
+        if (formSubtitle) {
+            formSubtitle.innerText = isLogin
+                ? 'Welcome back. Sign in to continue planning smarter.'
+                : 'Create your account to start tracking your money flow.';
+        }
+        if (forgotLink) {
+            forgotLink.style.display = isLogin ? 'inline' : 'none';
+        }
         document.getElementById('error-msg').style.display = 'none';
         
         // Clear fields
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
+        if (passwordInput) passwordInput.type = 'password';
+        if (passwordToggle) {
+            passwordToggle.innerText = 'Show';
+            passwordToggle.setAttribute('aria-label', 'Show password');
+            passwordToggle.setAttribute('aria-pressed', 'false');
+        }
     });
 
     document.getElementById('auth-form').addEventListener('submit', (e) => {

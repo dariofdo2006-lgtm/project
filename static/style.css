@@ -68,19 +68,70 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     align-items: center;
     min-height: 100vh;
     background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.18), transparent 34%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.12), transparent 28%);
+}
+
+.login-shell {
+    width: min(980px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 28px;
+    padding: 24px;
+}
+
+.login-hero {
+    background: linear-gradient(145deg, #0d1320 0%, #0b0d12 100%);
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+.login-hero-title {
+    margin-top: 20px;
+    font-size: 34px;
+    line-height: 1.12;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+.login-hero-copy {
+    color: #cbd5e1;
+    margin-top: 14px;
+    font-size: 15px;
+    max-width: 52ch;
+}
+
+.login-feature-list {
+    margin-top: 24px;
+    display: grid;
+    gap: 12px;
+}
+
+.login-feature-item {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    font-size: 14px;
+    color: #e2e8f0;
 }
 
 .login-container {
-    background-color: transparent;
+    background-color: #0b0d12;
     width: 100%;
     max-width: 400px;
     padding: 40px;
+    border-radius: 20px;
+    border: 1px solid #1a1f2e;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 .login-container h1 {
-    font-size: 32px;
+    font-size: 34px;
     font-weight: 700;
-    margin-bottom: 40px;
+    margin-bottom: 8px;
     color: var(--text-light);
 }
 
@@ -91,10 +142,25 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     margin-bottom: 34px;
 }
 
+.login-brand-mark {
+    width: 36px;
+    height: 36px;
+}
+
+.login-brand-mobile {
+    display: none;
+}
+
+.login-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 22px;
+    font-size: 14px;
+}
+
 .input-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     width: 100%;
 }
 
@@ -381,6 +447,14 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
+.login-submit {
+    margin-top: 18px;
+    height: 52px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.25px;
+}
+
 .btn-primary:hover {
     background-color: var(--brand-blue-hover);
     transform: translateY(-2px);
@@ -397,6 +471,51 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.auth-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.forgot-link {
+    color: #93c5fd;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.forgot-link:hover {
+    color: #bfdbfe;
+    text-decoration: underline;
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-field .unified-input {
+    padding-right: 78px !important;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 1px solid #2a3347;
+    background: #121726;
+    color: #dbeafe;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    height: 30px;
+    min-width: 56px;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    background: #172033;
 }
 
 .switch-mode span {
@@ -1165,14 +1284,30 @@ button,
         margin: 12px 0;
     }
 
+    .login-shell {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .login-hero {
+        display: none;
+    }
+
     .login-container {
         max-width: 100%;
         padding: 24px 16px;
+        border-radius: 14px;
+    }
+
+    .login-brand-mobile {
+        display: inline-flex;
+        margin-bottom: 18px;
     }
 
     .login-container h1 {
         font-size: 28px;
-        margin-bottom: 24px;
+        margin-bottom: 6px;
     }
 
     .settings-container,

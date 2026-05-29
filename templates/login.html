@@ -8,35 +8,61 @@
     <title>SpendWise - Sign In</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
-    <div class="login-container">
-        <div class="login-brand" aria-label="SpendWise">
-            <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark">
-            <span class="brand-name">SpendWise</span>
-        </div>
-        <h1 id="form-title">Sign In</h1>
-        <div id="error-msg" class="error-msg" style="display: none;"></div>
-        
-        <form id="auth-form">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="✉  Enter Username" required class="unified-input">
+    <div class="login-shell">
+        <section class="login-hero" aria-label="SpendWise overview">
+            <div class="login-brand" aria-label="SpendWise">
+                <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark login-brand-mark">
+                <span class="brand-name">SpendWise</span>
             </div>
-            
-            <div class="input-group">
-                <label for="password" id="pass-label">Password</label>
-                <input type="password" id="password" placeholder="🔒  Enter Password" required class="unified-input">
+            <h2 class="login-hero-title">Budget clarity in one calendar view.</h2>
+            <p class="login-hero-copy">
+                Track expenses, income, and cash flow in seconds with a fast, focused dashboard built for daily use.
+            </p>
+            <div class="login-feature-list">
+                <div class="login-feature-item">Real-time monthly tracking</div>
+                <div class="login-feature-item">Category insights and yearly reports</div>
+                <div class="login-feature-item">Exports for PDF, Excel, and CSV</div>
             </div>
-            
-            <button type="submit" id="submit-btn" class="btn-primary">SIGN IN</button>
-        </form>
-        
-        <div class="switch-mode">
-            <span id="switch-lbl">Don't have an account?</span>
-            <button type="button" class="btn-text" id="switch-btn">Sign up</button>
-        </div>
+        </section>
+
+        <section class="login-container" aria-label="Authentication form">
+            <div class="login-brand login-brand-mobile" aria-label="SpendWise">
+                <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark login-brand-mark">
+                <span class="brand-name">SpendWise</span>
+            </div>
+            <h1 id="form-title">Sign In</h1>
+            <p class="login-subtitle" id="form-subtitle">Welcome back. Sign in to continue planning smarter.</p>
+            <div id="error-msg" class="error-msg" style="display: none;"></div>
+
+            <form id="auth-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required class="unified-input">
+                </div>
+
+                <div class="input-group">
+                    <label for="password" id="pass-label">Password</label>
+                    <div class="password-field">
+                        <input type="password" id="password" placeholder="Enter password" required class="unified-input">
+                        <button type="button" class="password-toggle" id="password-toggle" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
+                </div>
+
+                <div class="auth-row">
+                    <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn-primary login-submit">Sign In</button>
+            </form>
+
+            <div class="switch-mode">
+                <span id="switch-lbl">Don't have an account?</span>
+                <button type="button" class="btn-text" id="switch-btn">Sign up</button>
+            </div>
+        </section>
     </div>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
