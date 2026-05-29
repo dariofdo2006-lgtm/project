@@ -439,6 +439,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .sidebar {
     width: 260px;
     background-color: var(--bg-color);
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     display: flex;
     flex-direction: column;
     padding: 24px 0;
@@ -492,9 +493,9 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 
 .brand-name {
     color: var(--text-light);
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0;
     line-height: 1;
 }
@@ -522,9 +523,9 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 }
 
 .nav-icon {
-    font-size: 18px;
+    font-size: 22px;
     margin-right: 12px;
-    width: 24px;
+    width: 30px;
     text-align: center;
     opacity: 0.9;
     transition: transform 0.2s ease;
@@ -537,6 +538,7 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
 .nav-text {
     font-size: 14px;
     font-weight: 500;
+    letter-spacing: 0.1px;
 }
 
 .main-content {
