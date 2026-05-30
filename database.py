@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from werkzeug.security import check_password_hash, generate_password_hash
+import calendar
 
 DISABLE_FIREBASE = os.environ.get("DISABLE_FIREBASE", "").lower() in {"1", "true", "yes"}
 
@@ -330,12 +331,16 @@ class Database:
             return self.cursor.lastrowid
 
     def get_expenses_by_month(self, user_id, year, month):
-        month_str = f"{year:04d}-{month:02d}"
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
-            expenses = [doc.to_dict() for doc in docs if doc.to_dict().get('date', '').startswith(month_str)]
+            _, last_day = calendar.monthrange(year, month)
+            start_date = f"{year:04d}-{month:02d}-01"
+            end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            expenses = [doc.to_dict() for doc in docs]
             return [(e["date"], e["amount"], e["category"]) for e in expenses]
-        elif self.is_mongo:
+
+        month_str = f"{year:04d}-{month:02d}"
+        if self.is_mongo:
             expenses = self.db.expenses.find({
                 "user_id": user_id,
                 "date": {"$regex": f"^{month_str}"}
@@ -359,16 +364,19 @@ class Database:
         return self.cursor.fetchall()
 
     def get_expenses_by_month_detailed(self, user_id, year, month):
-        month_str = f"{year:04d}-{month:02d}"
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
-            expenses = [doc.to_dict() for doc in docs if doc.to_dict().get('date', '').startswith(month_str)]
-            expenses.sort(key=lambda x: x.get('date', ''), reverse=True)
+            _, last_day = calendar.monthrange(year, month)
+            start_date = f"{year:04d}-{month:02d}-01"
+            end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            expenses = sorted([doc.to_dict() for doc in docs], key=lambda x: x.get('date', ''), reverse=True)
             return [
                 (e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False))
                 for e in expenses
             ]
-        elif self.is_mongo:
+
+        month_str = f"{year:04d}-{month:02d}"
+        if self.is_mongo:
             expenses = self.db.expenses.find({
                 "user_id": user_id,
                 "date": {"$regex": f"^{month_str}"}
@@ -609,8 +617,13 @@ class Database:
 
     def get_recurring_expenses(self, user_id, month_str):
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).stream()
-            expenses = [doc.to_dict() for doc in docs if doc.to_dict().get('date', '').startswith(month_str)]
+            year, month = map(int, month_str.split('-'))
+            _, last_day = calendar.monthrange(year, month)
+            start_date = f"{year:04d}-{month:02d}-01"
+            end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
+
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            expenses = [doc.to_dict() for doc in docs]
             return [(e["amount"], e["category"], e["name"], e.get("image_path"), e["date"]) for e in expenses]
         elif self.is_mongo:
             expenses = self.db.expenses.find({
@@ -625,9 +638,13 @@ class Database:
 
     def count_recurring_expenses(self, user_id, month_str):
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).stream()
-            count = sum(1 for doc in docs if doc.to_dict().get('date', '').startswith(month_str))
-            return count
+            year, month = map(int, month_str.split('-'))
+            _, last_day = calendar.monthrange(year, month)
+            start_date = f"{year:04d}-{month:02d}-01"
+            end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
+            
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            return sum(1 for _ in docs)
         elif self.is_mongo:
             return self.db.expenses.count_documents({
                 "user_id": user_id,
@@ -672,8 +689,8 @@ class Database:
 
     def get_expenses_by_date_range(self, user_id, start_date, end_date):
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
-            expenses = [e.to_dict() for e in docs if start_date <= e.to_dict().get('date', '') <= end_date]
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            expenses = [e.to_dict() for e in docs]
             expenses.sort(key=lambda x: x.get('date', ''), reverse=True)
             return [(e["date"], e["amount"], e["category"], e["name"]) for e in expenses]
         elif self.is_mongo:

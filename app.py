@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timedelta
 import json
 import csv
-import re
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, g
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -25,6 +25,7 @@ def load_env_file(path=".env"):
 load_env_file()
 
 from database import Database
+from ocr import scan_receipt_locally
 
 try:
     from fpdf import FPDF
@@ -32,16 +33,6 @@ try:
 except ImportError:
     FPDF = None
     HAS_FPDF = False
-
-try:
-    from PIL import Image, ImageOps
-except ImportError:
-    Image = None
-    ImageOps = None
-try:
-    import pytesseract
-except ImportError:
-    pytesseract = None
 
 # Try to import pandas for Excel export
 try:
@@ -52,27 +43,6 @@ except ImportError:
     pd = None
     import logging
     logging.warning("Pandas not installed. Excel export will not work.")
-
-if pytesseract:
-    # Try multiple common Tesseract installation paths
-    tesseract_paths = [
-        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-        "/usr/bin/tesseract",
-        "/usr/local/bin/tesseract",
-        "/opt/homebrew/bin/tesseract"
-    ]
-    
-    # Also check environment variable
-    env_path = os.environ.get("TESSERACT_PATH")
-    if env_path and os.path.exists(env_path):
-        pytesseract.pytesseract.tesseract_cmd = env_path
-    else:
-        # Try common installation paths
-        for path in tesseract_paths:
-            if os.path.exists(path):
-                pytesseract.pytesseract.tesseract_cmd = path
-                break
 
 app = Flask(__name__)
 # In production, set this from an environment variable!
@@ -118,254 +88,15 @@ def validate_csrf():
         return False
     return True
 
-def guess_category_from_text(text):
-    """Enhanced category guessing with transaction type detection"""
-    t = text.lower()
-    
-    # Check if this is an expense or income receipt
-    income_keywords = [
-        "salary", "income", "credit", "refund", "bonus", "stipend", "wage",
-        "deposit", "cashback", "dividend", "interest", "pension"
-    ]
-    
-    # If income keywords found, it's likely an income transaction
-    if any(keyword in t for keyword in income_keywords):
-        return "Income"
-    
-    # Otherwise, categorize as expense
-    # Simplified category keywords
-    expense_category_keywords = {
-        "Food": ["restaurant", "cafe", "food", "pizza", "burger", "coffee", "meal"],
-        "Grocery": ["grocery", "supermarket", "mart", "vegetable", "fruit", "dairy"],
-        "Transportation": ["uber", "taxi", "fuel", "petrol", "gas", "bus", "train"],
-        "Shopping": ["amazon", "shopping", "store", "purchase", "product"],
-        "Utilities": ["electricity", "water", "internet", "phone", "bill"],
-        "Healthcare": ["hospital", "clinic", "pharmacy", "medical", "medicine"],
-        "Entertainment": ["movie", "netflix", "game", "concert", "show"],
-        "Education": ["school", "college", "tuition", "course", "book"]
-    }
-    
-    for category, keywords in expense_category_keywords.items():
-        if any(w in t for w in keywords):
-            return category
-    
-    return "Other"
-
-def extract_amount_from_text(text):
-    """Improved amount extraction for Indian receipts"""
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    
-    # Priority keywords for total lines (more specific)
-    priority_keywords = [
-        "total", "amount due", "grand total", "final total", "payable", "sum"
-    ]
-    
-    # Multiple amount patterns to catch different formats including INR
-    amount_patterns = [
-        r"[₹$]\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+\.\d{2})",  # ₹1,234.56 or $1,234.56
-        r"[₹$]?(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+\.\d{2})",  # 1,234.56 or 1234.56
-        r"[₹$]\s*(\d+\.\d{2})",                              # ₹123.45 or $123.45
-        r"[₹$]?(\d+\.\d{2})",                                 # 123.45 or ₹123.45
-        r"(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+\.\d{2})",      # 1,234.56 or 1234.56
-    ]
-
-    def to_float(raw):
-        try:
-            cleaned = re.sub(r'[^\d.]', '', raw)
-            return float(cleaned)
-        except Exception:
-            return None
-
-    # First, try lines with total keywords
-    for ln in lines:
-        ln_lower = ln.lower()
-        if any(keyword in ln_lower for keyword in priority_keywords):
-            for pattern in amount_patterns:
-                matches = re.findall(pattern, ln)
-                if matches:
-                    for match in reversed(matches):
-                        val = to_float(match)
-                        if val is not None and 0 < val < 100000:
-                            return val
-
-    # Look for lines that might be totals (last lines with reasonable amounts)
-    for ln in reversed(lines):  # Check from bottom up
-        for pattern in amount_patterns:
-            matches = re.findall(pattern, ln)
-            if matches:
-                for match in matches:
-                    val = to_float(match)
-                    # Look for reasonable total amounts (typically > ₹5)
-                    if val is not None and 5 < val < 100000:
-                        # If this is the last line or near the end, it's likely the total
-                        if len(lines) - lines.index(ln) <= 3:  # Within last 3 lines
-                            return val
-    
-    # If no total found, look for the largest reasonable amount
-    all_amounts = []
-    for ln in lines:
-        for pattern in amount_patterns:
-            matches = re.findall(pattern, ln)
-            for match in matches:
-                val = to_float(match)
-                if val is not None and 5 < val < 100000:
-                    all_amounts.append(val)
-    
-    if all_amounts:
-        return max(all_amounts)
-    
-    return None
-
-def extract_items_from_text(text):
-    """Extract item list from receipt text (optimized for Indian receipts)"""
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    items = []
-    
-    # Skip lines that are definitely not items
-    skip_tokens = (
-        "total", "subtotal", "tax", "gst", "vat", "cash", "credit", "debit",
-        "change", "balance", "due", "paid", "receipt", "invoice", "bill",
-        "date", "time", "thank you", "phone", "tel", "www", "http", "email",
-        "order", "table", "customer"
-    )
-    
-    for ln in lines:
-        low = ln.lower()
-        
-        # Skip lines with skip tokens
-        if any(tok in low for tok in skip_tokens):
-            continue
-            
-        # Skip lines that are just totals (like "70" or "₹70")
-        if re.match(r'^[₹$]?\d+(?:,\d{3})*(?:\.\d{2})?$', ln.strip()):
-            continue
-            
-        # Skip lines that are too short or too long
-        if len(ln) < 3 or len(ln) > 80:
-            continue
-            
-        # Skip lines with no letters (just numbers/symbols)
-        if not re.search(r'[a-zA-Z]', ln):
-            continue
-            
-        # Look for Indian receipt item patterns like "1x Veg Sandwich ₹50"
-        item_pattern = r'(\d+x)?\s*([a-zA-Z][^₹$]*?)\s*[₹$]?\d+(?:,\d{3})*(?:\.\d{2})?'
-        match = re.search(item_pattern, ln)
-        if match:
-            quantity = match.group(1) or "1x"
-            item_name = match.group(2).strip()
-            if item_name:
-                items.append(f"{quantity} {item_name}")
-            continue
-            
-        # If no pattern match, but line has letters and reasonable length, include it
-        if len(re.findall(r'\d', ln)) <= 3:  # Not too many numbers
-            items.append(ln.strip())
-        
-        # Limit to reasonable number of items
-        if len(items) >= 15:
-            break
-    
-    return items
-
-def extract_name_from_text(text):
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    
-    # Skip tokens that are definitely not store names
-    skip_tokens = (
-        "invoice", "bill", "receipt", "date", "time", "gst", "tax", "vat",
-        "phone", "tel", "www", "http", "email", "thank you", "cash", "credit",
-        "debit", "card", "change", "balance", "item", "qty", "quantity"
-    )
-    
-    # Look for potential store names in first few lines
-    for ln in lines[:8]:
-        low = ln.lower()
-        
-        # Skip lines with skip tokens
-        if any(tok in low for tok in skip_tokens):
-            continue
-            
-        # Skip lines with too many numbers
-        if len(re.findall(r'\d', ln)) > 4:
-            continue
-            
-        # Skip lines that are too short or too long
-        if len(ln) < 3 or len(ln) > 50:
-            continue
-            
-        return ln.strip()
-    
-    return "Receipt Purchase"
-
-def scan_receipt_locally(file_bytes):
-    if not Image or not ImageOps or not pytesseract:
-        return None, "Local OCR dependencies missing. Install Pillow and pytesseract."
-    try:
-        # Open and preprocess image for better OCR accuracy
-        image = Image.open(io.BytesIO(file_bytes))
-        
-        # Convert to grayscale
-        gray = ImageOps.grayscale(image)
-        
-        # Resize for better OCR (scale up if too small)
-        width, height = gray.size
-        if max(width, height) < 1000:
-            scale_factor = 1000 / max(width, height)
-            new_width = int(width * scale_factor)
-            new_height = int(height * scale_factor)
-            gray = gray.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Apply multiple enhancement techniques
-        # 1. Auto contrast for better text visibility
-        enhanced = ImageOps.autocontrast(gray)
-        
-        # 2. Binarization for clearer text
-        threshold = 128
-        binary = enhanced.point(lambda x: 0 if x < threshold else 255, '1')
-        
-        # 3. Denoising using median filter
-        from PIL import ImageFilter
-        denoised = binary.filter(ImageFilter.MedianFilter(size=3))
-        
-        # Convert back to grayscale for Tesseract
-        final_image = denoised.convert('L')
-        
-        # Use simple, reliable Tesseract configuration
-        try:
-            text = pytesseract.image_to_string(final_image, config="--psm 6 --oem 3")
-        except Exception as e:
-            # Fallback to basic configuration
-            text = pytesseract.image_to_string(final_image, config="--psm 6")
-        
-        if not text or not text.strip():
-            return None, "Could not read text from receipt image."
-        
-        # Enhanced amount extraction
-        amount = extract_amount_from_text(text)
-        name = extract_name_from_text(text)
-        category = guess_category_from_text(text)
-        items = extract_items_from_text(text)
-        transaction_type = "Income" if category == "Income" else "Expense"
-        
-        # Create description with items if available
-        description = name
-        if items:
-            items_str = ", ".join(items[:5])  # Limit to first 5 items
-            if len(items) > 5:
-                items_str += f" and {len(items) - 5} more items"
-            description = f"{name} - {items_str}"
-        
-        return {
-            "name": name,
-            "amount": amount,
-            "category": category,
-            "description": description,
-            "type": transaction_type
-        }, None
-        
-    except Exception as e:
-        return None, f"Local OCR failed: {e}"
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"success": False, "message": "Unauthorized"}), 401
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def process_recurring_expenses(user_id):
     now = datetime.now()
@@ -443,11 +174,10 @@ def handle_large_file(_e):
     return jsonify({"success": False, "message": "File too large (max 4MB)."}), 413
 
 @app.route("/")
+@login_required
 def index():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    
     user_id = session["user_id"]
+    process_recurring_expenses(user_id)
     now = datetime.now()
     year = request.args.get("year", now.year, type=int)
     month = request.args.get("month", now.month, type=int)
@@ -539,9 +269,8 @@ def logout():
     return redirect(url_for("login"))
 
 @app.route("/api/expense", methods=["POST"])
+@login_required
 def add_expense():
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
@@ -566,9 +295,8 @@ def add_expense():
     return jsonify({"success": True, "id": expense_id})
 
 @app.route("/api/expense/<int:expense_id>/receipt", methods=["POST"])
+@login_required
 def upload_receipt(expense_id):
-    if "user_id" not in session:
-        return jsonify({"success": False}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     
@@ -593,9 +321,8 @@ def upload_receipt(expense_id):
     return jsonify({"success": True})
 
 @app.route("/api/receipt/scan", methods=["POST"])
+@login_required
 def scan_receipt():
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     if "file" not in request.files:
@@ -633,10 +360,8 @@ def scan_receipt():
     })
 
 @app.route("/api/receipt/<int:expense_id>")
+@login_required
 def view_receipt(expense_id):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-        
     receipt_data = db.get_receipt(expense_id, session["user_id"])
     if not receipt_data:
         return "No receipt found", 404
@@ -644,9 +369,8 @@ def view_receipt(expense_id):
     return f'<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="{receipt_data}" style="max-width:100%;max-height:100vh;"></body></html>'
 
 @app.route("/api/expense/<int:expense_id>", methods=["DELETE"])
+@login_required
 def delete_expense(expense_id):
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
@@ -655,9 +379,8 @@ def delete_expense(expense_id):
     return jsonify({"success": True})
 
 @app.route("/api/expense/<int:expense_id>", methods=["PUT"])
+@login_required
 def update_expense(expense_id):
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
@@ -683,10 +406,8 @@ def update_expense(expense_id):
     return jsonify({"success": True})
 
 @app.route("/category/<path:category_name>")
+@login_required
 def category_view(category_name):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    
     user_id = session["user_id"]
     expenses = db.get_expenses_by_category(user_id, category_name)
     
@@ -698,9 +419,8 @@ def category_view(category_name):
     )
 
 @app.route("/api/export")
+@login_required
 def export_pdf():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
     if not HAS_FPDF:
         return jsonify({"success": False, "message": "PDF export requires fpdf2 to be installed"}), 503
         
@@ -731,9 +451,8 @@ def export_pdf():
     )
 
 @app.route("/api/export/excel")
+@login_required
 def export_excel():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
     if not HAS_PANDAS:
         return jsonify({"success": False, "message": "Excel export requires pandas and openpyxl to be installed"}), 503
     
@@ -782,10 +501,8 @@ def export_excel():
         return jsonify({"success": False, "message": f"Excel export failed: {str(e)}"})
 
 @app.route("/api/export/csv")
+@login_required
 def export_csv():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    
     user_id = session["user_id"]
     
     # Get date range from query parameters
@@ -822,10 +539,8 @@ def export_csv():
     )
 
 @app.route("/api/export/json")
+@login_required
 def export_json():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    
     user_id = session["user_id"]
     
     # Get date range from query parameters
@@ -877,9 +592,8 @@ def export_json():
     )
 
 @app.route("/api/export/report")
+@login_required
 def export_report():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
     if not HAS_FPDF:
         return jsonify({"success": False, "message": "PDF report requires fpdf2 to be installed"}), 503
     
@@ -990,10 +704,8 @@ def export_report():
         return jsonify({"success": False, "message": f"Report generation failed: {str(e)}"})
 
 @app.route("/search")
+@login_required
 def search_view():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-        
     user_id = session["user_id"]
     q = request.args.get("q", "")
     
@@ -1007,10 +719,8 @@ def search_view():
     )
 
 @app.route("/yearly")
+@login_required
 def yearly_view():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-        
     user_id = session["user_id"]
     now = datetime.now()
     year = request.args.get("year", now.year, type=int)
@@ -1046,9 +756,8 @@ def yearly_view():
     )
 
 @app.route("/api/calculator/save", methods=["POST"])
+@login_required
 def save_calculator():
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     
@@ -1063,10 +772,8 @@ def save_calculator():
     return jsonify({"success": True})
 
 @app.route("/calculator")
+@login_required
 def calculator_view():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-        
     calc_type = request.args.get("type", "standard")
     saved_state = db.get_calculator_state(session["user_id"], calc_type) or 'null'
         
@@ -1078,16 +785,13 @@ def calculator_view():
     )
 
 @app.route("/settings")
+@login_required
 def settings_view():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    user_id = session["user_id"]
     return render_template("settings.html", active_view="settings")
 
 @app.route("/api/settings/currency", methods=["POST"])
+@login_required
 def update_currency():
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     currency = request.json.get("currency_symbol", "₹")
@@ -1096,9 +800,8 @@ def update_currency():
     return jsonify({"success": True})
 
 @app.route("/api/categories", methods=["POST"])
+@login_required
 def add_custom_category():
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     name = request.json.get("name", "").strip()
@@ -1110,9 +813,8 @@ def add_custom_category():
     return jsonify({"success": True})
 
 @app.route("/api/categories/<cat_type>/<name>", methods=["DELETE"])
+@login_required
 def delete_custom_category(cat_type, name):
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
