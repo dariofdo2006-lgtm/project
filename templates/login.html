@@ -17,15 +17,10 @@
                 <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark login-brand-mark">
                 <span class="brand-name">SpendWise</span>
             </div>
-            <h2 class="login-hero-title">Budget clarity in one calendar view.</h2>
+            <h2 class="login-hero-title">Budget clarity in <span class="login-hero-accent">one calendar</span> view.</h2>
             <p class="login-hero-copy">
                 Track expenses, income, and cash flow in seconds with a fast, focused dashboard built for daily use.
             </p>
-            <div class="login-feature-list">
-                <div class="login-feature-item">Real-time monthly tracking</div>
-                <div class="login-feature-item">Category insights and yearly reports</div>
-                <div class="login-feature-item">Exports for PDF, Excel, and CSV</div>
-            </div>
         </section>
 
         <section class="login-container" aria-label="Authentication form">
@@ -33,14 +28,21 @@
                 <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-mark login-brand-mark">
                 <span class="brand-name">SpendWise</span>
             </div>
-            <h1 id="form-title">Sign In</h1>
-            <p class="login-subtitle" id="form-subtitle">Welcome back. Sign in to continue planning smarter.</p>
+            <h1 id="form-title">Welcome back</h1>
+            <p class="login-subtitle" id="form-subtitle">Sign in to continue planning smarter.</p>
             <div id="error-msg" class="error-msg" style="display: none;"></div>
 
             <form id="auth-form">
                 <div class="input-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Enter username" required class="unified-input">
+                    <div class="input-with-icon">
+                        <input type="text" id="username" placeholder="Enter username" required class="unified-input">
+                        <span class="field-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M12 12a4.5 4.5 0 1 0 0-9a4.5 4.5 0 0 0 0 9Zm0 2.5c-4.1 0-7.5 2.8-7.5 6.2c0 .4.3.8.8.8h13.4c.5 0 .8-.4.8-.8c0-3.4-3.4-6.2-7.5-6.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -51,12 +53,37 @@
                     </div>
                 </div>
 
+                <div class="input-group" id="confirm-group" style="display: none;">
+                    <label for="confirm-password">Confirm password</label>
+                    <div class="password-field">
+                        <input type="password" id="confirm-password" placeholder="Confirm password" class="unified-input">
+                        <button type="button" class="password-toggle" id="confirm-password-toggle" aria-label="Show password" aria-pressed="false">
+                            <svg class="eye-icon eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12C3.9 7.9 7.4 5.5 12 5.5C16.6 5.5 20.1 7.9 22 12C20.1 16.1 16.6 18.5 12 18.5C7.4 18.5 3.9 16.1 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                            </svg>
+                            <svg class="eye-icon eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12C3.9 7.9 7.4 5.5 12 5.5C16.6 5.5 20.1 7.9 22 12C20.1 16.1 16.6 18.5 12 18.5C7.4 18.5 3.9 16.1 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M4 20L20 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="auth-row">
                     <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
                 </div>
 
-                <button type="submit" id="submit-btn" class="btn-primary login-submit">Sign In</button>
+                <button type="submit" id="submit-btn" class="btn-primary login-submit">
+                    <svg class="submit-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M17 10V8a5 5 0 0 0-10 0v2M7.5 10h9a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 16.5 20h-9A1.5 1.5 0 0 1 6 18.5v-7A1.5 1.5 0 0 1 7.5 10Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="submit-label">Sign In</span>
+                </button>
             </form>
+
+            <div class="auth-divider"><span>or</span></div>
 
             <div class="switch-mode">
                 <span id="switch-lbl">Don't have an account?</span>

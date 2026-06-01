@@ -312,20 +312,95 @@ function deleteCurrentTransaction() {
 // Authentication
 if (document.getElementById('auth-form')) {
     let isLogin = true;
-    const forgotLink = document.getElementById('forgot-link');
+    const authForm = document.getElementById('auth-form');
+    const formTitle = document.getElementById('form-title');
     const formSubtitle = document.getElementById('form-subtitle');
-    const passwordToggle = document.getElementById('password-toggle');
+    const submitLabel = document.getElementById('submit-label');
+    const switchLabel = document.getElementById('switch-lbl');
+    const switchBtn = document.getElementById('switch-btn');
+    const errorEl = document.getElementById('error-msg');
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const confirmGroup = document.getElementById('confirm-group');
+    const forgotLink = document.getElementById('forgot-link');
+    const passwordToggle = document.getElementById('password-toggle');
+    const confirmPasswordToggle = document.getElementById('confirm-password-toggle');
 
-    if (passwordToggle && passwordInput) {
-        passwordToggle.addEventListener('click', () => {
-            const isHidden = passwordInput.type === 'password';
-            passwordInput.type = isHidden ? 'text' : 'password';
-            passwordToggle.innerText = isHidden ? 'Hide' : 'Show';
-            passwordToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-            passwordToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+    const wirePasswordToggle = (toggleBtn, inputEl) => {
+        if (!toggleBtn || !inputEl) return;
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = inputEl.type === 'password';
+            inputEl.type = isHidden ? 'text' : 'password';
+            toggleBtn.classList.toggle('is-visible', isHidden);
+            toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            toggleBtn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
         });
-    }
+    };
+
+    const resetPasswordToggle = (toggleBtn, inputEl) => {
+        if (!inputEl) return;
+        inputEl.type = 'password';
+        if (!toggleBtn) return;
+        toggleBtn.classList.remove('is-visible');
+        toggleBtn.setAttribute('aria-label', 'Show password');
+        toggleBtn.setAttribute('aria-pressed', 'false');
+    };
+
+    const updateAuthMode = (nextIsLogin, clearFields = true) => {
+        isLogin = nextIsLogin;
+
+        if (formTitle) formTitle.innerText = isLogin ? 'Welcome back' : 'Create account';
+        if (submitLabel) submitLabel.innerText = isLogin ? 'Sign In' : 'Sign Up';
+        if (switchLabel) switchLabel.innerText = isLogin ? "Don't have an account?" : 'Already have an account?';
+        if (switchBtn) switchBtn.innerText = isLogin ? 'Sign up' : 'Sign in';
+        if (formSubtitle) {
+            formSubtitle.innerText = isLogin
+                ? 'Sign in to continue planning smarter.'
+                : 'Create your account to start planning smarter.';
+        }
+        if (forgotLink) {
+            forgotLink.style.display = isLogin ? 'inline' : 'none';
+        }
+        if (confirmGroup) {
+            confirmGroup.style.display = isLogin ? 'none' : 'block';
+        }
+        if (confirmPasswordInput) {
+            confirmPasswordInput.required = !isLogin;
+        }
+
+        document.title = `SpendWise - ${isLogin ? 'Sign In' : 'Sign Up'}`;
+        if (errorEl) errorEl.style.display = 'none';
+
+        if (clearFields) {
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            if (confirmPasswordInput) confirmPasswordInput.value = '';
+        }
+        resetPasswordToggle(passwordToggle, passwordInput);
+        resetPasswordToggle(confirmPasswordToggle, confirmPasswordInput);
+    };
+
+    const authRequest = (url, payload) => {
+        return apiFetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(async (res) => {
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || !body.success) {
+                const msg = body.message || 'Authentication failed';
+                throw new Error(msg);
+            }
+            return body;
+        });
+    };
+
+    wirePasswordToggle(passwordToggle, passwordInput);
+    wirePasswordToggle(confirmPasswordToggle, confirmPasswordInput);
+
+    const signupMode = new URLSearchParams(window.location.search).get('mode') === 'signup';
+    updateAuthMode(!signupMode, false);
 
     if (forgotLink) {
         forgotLink.addEventListener('click', (e) => {
@@ -334,62 +409,41 @@ if (document.getElementById('auth-form')) {
         });
     }
     
-    document.getElementById('switch-btn').addEventListener('click', () => {
-        isLogin = !isLogin;
-        document.getElementById('form-title').innerText = isLogin ? 'Sign In' : 'Sign Up';
-        document.getElementById('submit-btn').innerText = isLogin ? 'Sign In' : 'Create Account';
-        document.getElementById('switch-lbl').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
-        document.getElementById('switch-btn').innerText = isLogin ? 'Sign up' : 'Sign in';
-        if (formSubtitle) {
-            formSubtitle.innerText = isLogin
-                ? 'Welcome back. Sign in to continue planning smarter.'
-                : 'Create your account to start tracking your money flow.';
-        }
-        if (forgotLink) {
-            forgotLink.style.display = isLogin ? 'inline' : 'none';
-        }
-        document.getElementById('error-msg').style.display = 'none';
-        
-        // Clear fields
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        if (passwordInput) passwordInput.type = 'password';
-        if (passwordToggle) {
-            passwordToggle.innerText = 'Show';
-            passwordToggle.setAttribute('aria-label', 'Show password');
-            passwordToggle.setAttribute('aria-pressed', 'false');
-        }
-    });
-
-    document.getElementById('auth-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        
-        const url = isLogin ? '/login' : '/register';
-        
-        apiFetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: u, password: p})
-        }).then(res => {
-            if (!res.ok) {
-                return res.text().then(text => { throw new Error(text) });
-            }
-            return res.json();
-        }).then(data => {
-            if(data.success) {
-                window.location.href = '/';
-            } else {
-                const err = document.getElementById('error-msg');
-                err.innerText = data.message || 'Authentication failed';
-                err.style.display = 'block';
-            }
-        }).catch(err => {
-            const errEl = document.getElementById('error-msg');
-            errEl.innerText = 'Server error occurred. See console.';
-            errEl.style.display = 'block';
-            console.error('Auth error:', err);
+    if (switchBtn) {
+        switchBtn.addEventListener('click', () => {
+            updateAuthMode(!isLogin);
         });
+    }
+
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const u = usernameInput ? usernameInput.value.trim() : '';
+        const p = passwordInput ? passwordInput.value : '';
+        const cp = confirmPasswordInput ? confirmPasswordInput.value : '';
+
+        if (!isLogin && p !== cp) {
+            if (errorEl) {
+                errorEl.innerText = 'Passwords do not match.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+
+        try {
+            const payload = { username: u, password: p };
+            const url = isLogin ? '/login' : '/register';
+            await authRequest(url, payload);
+
+            if (!isLogin) {
+                await authRequest('/login', payload);
+            }
+            window.location.href = '/';
+        } catch (err) {
+            if (errorEl) {
+                errorEl.innerText = err.message || 'Server error occurred. See console.';
+                errorEl.style.display = 'block';
+            }
+            console.error('Auth error:', err);
+        }
     });
 }
