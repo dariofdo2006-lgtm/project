@@ -153,8 +153,6 @@ def inject_global_vars():
             )
         except Exception:
             app.logger.exception("Failed to load user context")
-            session.pop("user_id", None)
-            session.pop("username", None)
 
     return dict(
         categories=[],
@@ -232,9 +230,24 @@ def index():
         )
     except Exception:
         app.logger.exception("Failed to render dashboard")
-        session.pop("user_id", None)
-        session.pop("username", None)
-        return redirect(url_for("login"))
+        now = datetime.now()
+        year = request.args.get("year", now.year, type=int)
+        month = request.args.get("month", now.month, type=int)
+        if month is None or month < 1 or month > 12:
+            month = now.month
+        selected_date = request.args.get("date", now.strftime("%Y-%m-%d"))
+        return render_template(
+            "index.html",
+            year=year,
+            month=month,
+            selected_date=selected_date,
+            month_name=calendar.month_name[month],
+            total_income=0.0,
+            total_expenses=0.0,
+            cash_diff=0.0,
+            monthly_expenses=[],
+            active_view='home'
+        )
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
