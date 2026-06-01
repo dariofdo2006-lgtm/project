@@ -139,19 +139,31 @@ def inject_global_vars():
     show_backend_badge = os.environ.get("SHOW_BACKEND_BADGE", "1").lower() in {"1", "true", "yes"}
     if "user_id" in session:
         user_id = session["user_id"]
-        currency = get_cached_settings(user_id)
-        expense_cats = get_cached_categories(user_id, 'expense')
-        income_cats = get_cached_categories(user_id, 'income')
-        return dict(
-            currency=currency,
-            categories=expense_cats,
-            income_categories=income_cats,
-            csrf_token=get_csrf_token(),
-            backend_name=backend_name,
-            show_backend_badge=show_backend_badge
-        )
-    return dict(categories=[], income_categories=[], currency="₹", csrf_token=get_csrf_token())
+        try:
+            currency = get_cached_settings(user_id)
+            expense_cats = get_cached_categories(user_id, 'expense')
+            income_cats = get_cached_categories(user_id, 'income')
+            return dict(
+                currency=currency,
+                categories=expense_cats,
+                income_categories=income_cats,
+                csrf_token=get_csrf_token(),
+                backend_name=backend_name,
+                show_backend_badge=show_backend_badge
+            )
+        except Exception:
+            app.logger.exception("Failed to load user context")
+            session.pop("user_id", None)
+            session.pop("username", None)
 
+    return dict(
+        categories=[],
+        income_categories=[],
+        currency="₹",
+        csrf_token=get_csrf_token(),
+        backend_name=backend_name,
+        show_backend_badge=show_backend_badge
+    )
 @app.context_processor
 def inject_backend_vars():
     return dict(
@@ -177,47 +189,52 @@ def handle_large_file(_e):
 @login_required
 def index():
     user_id = session["user_id"]
-    process_recurring_expenses(user_id)
-    now = datetime.now()
-    year = request.args.get("year", now.year, type=int)
-    month = request.args.get("month", now.month, type=int)
-    if month is None or month < 1 or month > 12:
-        month = now.month
-    selected_date = request.args.get("date", now.strftime("%Y-%m-%d"))
-    
-    # Base data
-    raw_expenses = db.get_expenses_by_month(user_id, year, month)
-    
-    total_income = 0.0
-    total_expenses = 0.0
-    
-    # Process monthly numbers
-    income_categories = get_cached_categories(user_id, 'income')
-    for row in raw_expenses:
-        _, amount, category = row
-        if category in income_categories:
-            total_income += amount
-        else:
-            total_expenses += amount
-            
-    cash_diff = total_income - total_expenses
-    
-    # Get all transactions for the current month (for right-side list)
-    monthly_expenses = db.get_expenses_by_month_detailed(user_id, year, month)
-    
-    return render_template(
-        "index.html",
-        year=year,
-        month=month,
-        selected_date=selected_date,
-        month_name=calendar.month_name[month],
-        total_income=total_income,
-        total_expenses=total_expenses,
-        cash_diff=cash_diff,
-        monthly_expenses=monthly_expenses,
-        active_view='home'
-    )
+    try:
+        process_recurring_expenses(user_id)
+        now = datetime.now()
+        year = request.args.get("year", now.year, type=int)
+        month = request.args.get("month", now.month, type=int)
+        if month is None or month < 1 or month > 12:
+            month = now.month
+        selected_date = request.args.get("date", now.strftime("%Y-%m-%d"))
 
+        # Base data
+        raw_expenses = db.get_expenses_by_month(user_id, year, month)
+
+        total_income = 0.0
+        total_expenses = 0.0
+
+        # Process monthly numbers
+        income_categories = get_cached_categories(user_id, 'income')
+        for row in raw_expenses:
+            _, amount, category = row
+            if category in income_categories:
+                total_income += amount
+            else:
+                total_expenses += amount
+
+        cash_diff = total_income - total_expenses
+
+        # Get all transactions for the current month (for right-side list)
+        monthly_expenses = db.get_expenses_by_month_detailed(user_id, year, month)
+
+        return render_template(
+            "index.html",
+            year=year,
+            month=month,
+            selected_date=selected_date,
+            month_name=calendar.month_name[month],
+            total_income=total_income,
+            total_expenses=total_expenses,
+            cash_diff=cash_diff,
+            monthly_expenses=monthly_expenses,
+            active_view='home'
+        )
+    except Exception:
+        app.logger.exception("Failed to render dashboard")
+        session.pop("user_id", None)
+        session.pop("username", None)
+        return redirect(url_for("login"))
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
