@@ -208,13 +208,20 @@ def inject_backend_vars():
 
 @app.route("/api/health")
 def health():
-    return jsonify({
+    result = {
         "success": True,
         "backend": db.backend_name(),
         "firebase": db.is_firebase,
         "pdf_export": HAS_FPDF,
         "excel_export": HAS_PANDAS
-    })
+    }
+    try:
+        from database import FIREBASE_INIT_ERROR
+        if FIREBASE_INIT_ERROR:
+            result["firebase_error"] = str(FIREBASE_INIT_ERROR)
+    except ImportError:
+        pass
+    return jsonify(result)
 
 @app.errorhandler(RequestEntityTooLarge)
 def handle_large_file(_e):

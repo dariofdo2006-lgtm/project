@@ -23,6 +23,8 @@ try:
     from firebase_admin import firestore
     FIREBASE_AVAILABLE = True
 except Exception as exc:
+    import logging
+    logging.warning(f"Firebase init failed, falling back: {exc}")
     FIREBASE_AVAILABLE = False
     firestore_db = None
     firestore = None
