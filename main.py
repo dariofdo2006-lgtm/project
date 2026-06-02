@@ -218,11 +218,7 @@ class LoginWindow(ctk.CTkFrame):
             else:
                 self.show_message("Username already exists.", is_error=True)
         elif self.current_mode == "forgot":
-            if self.db.update_password(username, password):
-                self.show_message("Password updated successfully!", is_error=False)
-                self.after(1500, lambda: self.switch_mode("login"))
-            else:
-                self.show_message("Username not found.", is_error=True)
+            self.show_message("Password reset is not available from this app.", is_error=True)
 
 
 class AddExpenseModal(ctk.CTkFrame):

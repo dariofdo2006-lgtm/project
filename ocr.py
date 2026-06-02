@@ -231,7 +231,7 @@ def scan_receipt_locally(file_bytes):
         name = extract_name_from_text(text)
         category = guess_category_from_text(text)
         items = extract_items_from_text(text)
-        transaction_type = "Income" if category == "Income" else "Expense"
+        transaction_type = "income" if category == "Income" else "expense"
         
         # Create description with items if available
         description = name

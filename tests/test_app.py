@@ -1,6 +1,7 @@
 import importlib
 import os
 import re
+import sys
 import tempfile
 import unittest
 
@@ -16,9 +17,15 @@ class BudgetCalendarAppTest(unittest.TestCase):
         os.environ["FLASK_SECRET_KEY"] = "test-secret-key"
         os.environ["SHOW_BACKEND_BADGE"] = "0"
 
-        import app
-
-        cls.app_module = importlib.reload(app)
+        if "app" in sys.modules:
+            old_db = getattr(sys.modules["app"], "db", None)
+            old_conn = getattr(old_db, "conn", None)
+            if old_conn is not None:
+                old_conn.close()
+            cls.app_module = importlib.reload(sys.modules["app"])
+        else:
+            import app
+            cls.app_module = app
         cls.client = cls.app_module.app.test_client()
 
     @classmethod
@@ -104,6 +111,46 @@ class BudgetCalendarAppTest(unittest.TestCase):
             },
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_logout_requires_post_and_csrf(self):
+        token = self.register_and_login("logout-user", "safe-pass-123")
+
+        get_response = self.client.get("/logout")
+        self.assertEqual(get_response.status_code, 405)
+
+        post_without_csrf = self.client.post("/logout")
+        self.assertEqual(post_without_csrf.status_code, 403)
+
+        post_with_csrf = self.client.post("/logout", data={"csrf_token": token})
+        self.assertEqual(post_with_csrf.status_code, 302)
+        self.assertIn("/login", post_with_csrf.headers["Location"])
+
+    def test_invalid_transaction_payloads_are_rejected(self):
+        token = self.register_and_login("validation-user", "safe-pass-123")
+
+        invalid_date = self.client.post(
+            "/api/expense",
+            json={
+                "date": "not-a-date",
+                "amount": "10",
+                "category": "Food",
+                "name": "Bad date",
+            },
+            headers={"X-CSRF-Token": token},
+        )
+        self.assertEqual(invalid_date.status_code, 400)
+
+        invalid_amount = self.client.post(
+            "/api/expense",
+            json={
+                "date": "2026-05-15",
+                "amount": "-10",
+                "category": "Food",
+                "name": "Bad amount",
+            },
+            headers={"X-CSRF-Token": token},
+        )
+        self.assertEqual(invalid_amount.status_code, 400)
 
 
 if __name__ == "__main__":

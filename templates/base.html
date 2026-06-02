@@ -24,12 +24,10 @@
 
             <div class="sidebar-menu">
                 <a href="/" class="nav-item {% if active_view == 'home' %}active{% endif %}">
-                    <span class="nav-icon">🏠</span>
                     <span class="nav-text">Home</span>
                 </a>
 
                 <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('expenses-sub')">
-                    <span class="nav-icon">💰</span>
                     <span class="nav-text">Expenses</span>
                     <span class="chev" id="expenses-chev">></span>
                 </button>
@@ -42,7 +40,6 @@
                 </div>
 
                 <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('income-sub')">
-                    <span class="nav-icon">📥</span>
                     <span class="nav-text">Income</span>
                     <span class="chev" id="income-chev">></span>
                 </button>
@@ -55,12 +52,10 @@
                 </div>
 
                 <a href="/yearly" class="nav-item {% if active_view == 'yearly' %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
                     <span class="nav-text">Yearly Report</span>
                 </a>
 
                 <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('calc-sub')">
-                    <span class="nav-icon">🧮</span>
                     <span class="nav-text">Calculator</span>
                     <span class="chev" id="calc-chev">></span>
                 </button>
@@ -82,7 +77,6 @@
                 <div style="flex: 1;"></div>
 
                 <button type="button" class="nav-item collapsible-header" onclick="toggleSidebar('export-sub')">
-                    <span class="nav-icon">📤</span>
                     <span class="nav-text">Export</span>
                     <span class="chev" id="export-chev">></span>
                 </button>
@@ -105,14 +99,15 @@
                 </div>
 
                 <a href="/settings" class="nav-item {% if active_view == 'settings' %}active{% endif %}">
-                    <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Settings</span>
                 </a>
 
-                <a href="/logout" class="nav-item" onclick="sessionStorage.removeItem('settingsTipShown');">
-                    <span class="nav-icon">➖</span>
-                    <span class="nav-text">Sign Out</span>
-                </a>
+                <form action="/logout" method="POST" class="logout-form" onsubmit="sessionStorage.removeItem('settingsTipShown');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="nav-item logout-button">
+                        <span class="nav-text">Sign Out</span>
+                    </button>
+                </form>
             </div>
         </aside>
 

@@ -3,6 +3,7 @@ import calendar
 import io
 import base64
 import secrets
+import math
 from datetime import datetime, timedelta
 import json
 import csv
@@ -56,6 +57,8 @@ else:
     import logging
     logging.warning("Using auto-generated secret key. Set FLASK_SECRET_KEY environment variable in production!")
 app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "0").lower() in {"1", "true", "yes"}
 
 @app.before_request
 def redirect_www():
@@ -82,11 +85,45 @@ def get_csrf_token():
     return token
 
 def validate_csrf():
-    sent_token = request.headers.get("X-CSRF-Token")
+    sent_token = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
     expected_token = session.get("csrf_token")
     if not expected_token or not sent_token or not secrets.compare_digest(sent_token, expected_token):
         return False
     return True
+
+def parse_transaction_payload(data):
+    if not data:
+        return None, "Missing request body"
+
+    date = data.get("date")
+    try:
+        datetime.strptime(date or "", "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return None, "Invalid date"
+
+    try:
+        amount_raw = data.get("amount")
+        if amount_raw is None or amount_raw == "":
+            return None, "Amount is required"
+        amount = float(amount_raw)
+    except (ValueError, TypeError):
+        return None, "Invalid amount"
+
+    if not math.isfinite(amount) or amount < 0:
+        return None, "Invalid amount"
+
+    category = str(data.get("category") or "").strip()
+    name = str(data.get("name") or "").strip()
+    if not category or not name:
+        return None, "All fields required"
+
+    return {
+        "date": date,
+        "amount": amount,
+        "category": category,
+        "name": name,
+        "is_recurring": bool(data.get("is_recurring", False)),
+    }, None
 
 def login_required(f):
     @wraps(f)
@@ -293,9 +330,12 @@ def register():
     else:
         return jsonify({"success": False, "message": "Username already exists"})
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
+    if not validate_csrf():
+        return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
     session.pop("user_id", None)
+    session.pop("username", None)
     return redirect(url_for("login"))
 
 @app.route("/api/expense", methods=["POST"])
@@ -304,24 +344,13 @@ def add_expense():
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
-    data = request.json
+    data = request.get_json(silent=True) or {}
     user_id = session["user_id"]
-    date = data.get("date")
-    try:
-        amount_raw = data.get("amount")
-        if amount_raw is None or amount_raw == "":
-            return jsonify({"success": False, "message": "Amount is required"}), 400
-        amount = float(amount_raw)
-    except (ValueError, TypeError):
-        return jsonify({"success": False, "message": "Invalid amount"}), 400
-    category = data.get("category")
-    name = data.get("name")
-    is_recurring = data.get("is_recurring", False)
-    
-    if not date or not category or not name:
-        return jsonify({"success": False, "message": "All fields required"}), 400
-        
-    expense_id = db.add_expense(user_id, date, amount, category, name, None, is_recurring)
+    tx, error = parse_transaction_payload(data)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
+
+    expense_id = db.add_expense(user_id, tx["date"], tx["amount"], tx["category"], tx["name"], None, tx["is_recurring"])
     return jsonify({"success": True, "id": expense_id})
 
 @app.route("/api/expense/<int:expense_id>/receipt", methods=["POST"])
@@ -395,8 +424,11 @@ def view_receipt(expense_id):
     receipt_data = db.get_receipt(expense_id, session["user_id"])
     if not receipt_data:
         return "No receipt found", 404
-        
-    return f'<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="{receipt_data}" style="max-width:100%;max-height:100vh;"></body></html>'
+    if not isinstance(receipt_data, str) or not receipt_data.startswith("data:image/"):
+        return "Invalid receipt", 404
+
+    safe_receipt_data = json.dumps(receipt_data)
+    return f'<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src={safe_receipt_data} style="max-width:100%;max-height:100vh;"></body></html>'
 
 @app.route("/api/expense/<int:expense_id>", methods=["DELETE"])
 @login_required
@@ -414,24 +446,13 @@ def update_expense(expense_id):
     if not validate_csrf():
         return jsonify({"success": False, "message": "Invalid CSRF token"}), 403
         
-    data = request.json
+    data = request.get_json(silent=True) or {}
     user_id = session["user_id"]
-    date = data.get("date")
-    try:
-        amount_raw = data.get("amount")
-        if amount_raw is None or amount_raw == "":
-            return jsonify({"success": False, "message": "Amount is required"}), 400
-        amount = float(amount_raw)
-    except (ValueError, TypeError):
-        return jsonify({"success": False, "message": "Invalid amount"}), 400
-    category = data.get("category")
-    name = data.get("name")
-    is_recurring = data.get("is_recurring", False)
-    
-    if not date or not category or not name:
-        return jsonify({"success": False, "message": "All fields required"}), 400
-        
-    if not db.update_expense(expense_id, user_id, date, amount, category, name, is_recurring):
+    tx, error = parse_transaction_payload(data)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
+
+    if not db.update_expense(expense_id, user_id, tx["date"], tx["amount"], tx["category"], tx["name"], tx["is_recurring"]):
         return jsonify({"success": False, "message": "Transaction not found"}), 404
     return jsonify({"success": True})
 

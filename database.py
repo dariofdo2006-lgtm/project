@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import re
 from werkzeug.security import check_password_hash, generate_password_hash
 import calendar
 
@@ -715,11 +716,12 @@ class Database:
             expenses.sort(key=lambda x: x.get('date', ''), reverse=True)
             return [(e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False)) for e in expenses]
         elif self.is_mongo:
+            safe_query = re.escape(query)
             expenses = self.db.expenses.find({
                 "user_id": user_id,
                 "$or": [
-                    {"name": {"$regex": query, "$options": "i"}},
-                    {"category": {"$regex": query, "$options": "i"}}
+                    {"name": {"$regex": safe_query, "$options": "i"}},
+                    {"category": {"$regex": safe_query, "$options": "i"}}
                 ]
             }).sort("date", pymongo.DESCENDING)
             return [(e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False)) for e in expenses]

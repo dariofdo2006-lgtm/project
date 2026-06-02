@@ -128,20 +128,24 @@ function openModal(dateStr) {
     document.getElementById('panel-overlay').classList.add('active');
 }
 
-function openEditModal(id, dateStr, amount, type, name, receipt_path) {
+function openEditModal(id, dateStr, amount, category, name, hasReceipt, isRecurring) {
     document.getElementById('tx-id').value = id;
     document.getElementById('tx-date').value = dateStr;
+    const type = (window.incomeCats || []).includes(category) ? 'income' : 'expense';
     document.getElementById('tx-type').value = type;
     document.getElementById('tx-amount').value = amount;
     document.getElementById('tx-name').value = name;
     document.getElementById('receipt-input').value = '';
+    const recurringInput = document.getElementById('tx-recurring');
+    if (recurringInput) recurringInput.checked = Boolean(isRecurring);
     setScanStatus('');
     
     document.getElementById('modal-title').innerText = 'Edit Transaction';
     document.getElementById('del-btn').style.display = 'block';
     
     updateCatDropdown();
-    // Preselect the category if possible. Since we don't have cat saved in tx table properly in original code, we guess based on name for now or just let user reselect.
+    const catSelect = document.getElementById('tx-category');
+    if (catSelect) catSelect.value = category;
     
     document.getElementById('side-panel').classList.add('active');
     document.getElementById('panel-overlay').classList.add('active');
@@ -387,10 +391,21 @@ if (document.getElementById('auth-form')) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(async (res) => {
-            const body = await res.json().catch(() => ({}));
-            if (!res.ok || !body.success) {
-                const msg = body.message || 'Authentication failed';
-                throw new Error(msg);
+            const contentType = (res.headers.get('content-type') || '').toLowerCase();
+            let body = null;
+            let fallbackText = '';
+
+            if (contentType.includes('application/json')) {
+                body = await res.json().catch(() => null);
+            } else {
+                fallbackText = (await res.text().catch(() => '')).trim();
+            }
+
+            const isSuccess = Boolean(body && body.success);
+            if (!res.ok || !isSuccess) {
+                const messageFromBody = body && typeof body.message === 'string' ? body.message.trim() : '';
+                const message = messageFromBody || fallbackText || `Authentication failed (${res.status})`;
+                throw new Error(message);
             }
             return body;
         });
@@ -440,7 +455,8 @@ if (document.getElementById('auth-form')) {
             window.location.href = '/';
         } catch (err) {
             if (errorEl) {
-                errorEl.innerText = err.message || 'Server error occurred. See console.';
+                const message = (err && err.message ? String(err.message) : '').trim();
+                errorEl.innerText = message || 'Server error occurred. See console.';
                 errorEl.style.display = 'block';
             }
             console.error('Auth error:', err);
