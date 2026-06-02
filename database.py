@@ -338,9 +338,10 @@ class Database:
             _, last_day = calendar.monthrange(year, month)
             start_date = f"{year:04d}-{month:02d}-01"
             end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
             expenses = [doc.to_dict() for doc in docs]
-            return [(e["date"], e["amount"], e["category"]) for e in expenses]
+            filtered = [e for e in expenses if start_date <= e.get("date", "") <= end_date]
+            return [(e["date"], e["amount"], e["category"]) for e in filtered]
 
         month_str = f"{year:04d}-{month:02d}"
         if self.is_mongo:
@@ -371,11 +372,13 @@ class Database:
             _, last_day = calendar.monthrange(year, month)
             start_date = f"{year:04d}-{month:02d}-01"
             end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
-            expenses = sorted([doc.to_dict() for doc in docs], key=lambda x: x.get('date', ''), reverse=True)
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
+            expenses = [doc.to_dict() for doc in docs]
+            filtered = [e for e in expenses if start_date <= e.get("date", "") <= end_date]
+            filtered_sorted = sorted(filtered, key=lambda x: (x.get('date', ''), x.get('id', 0)), reverse=True)
             return [
                 (e["id"], e["date"], e["amount"], e["category"], e["name"], 1 if e.get("image_path") else 0, e.get("is_recurring", False))
-                for e in expenses
+                for e in filtered_sorted
             ]
 
         month_str = f"{year:04d}-{month:02d}"
@@ -625,9 +628,13 @@ class Database:
             start_date = f"{year:04d}-{month:02d}-01"
             end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
 
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
             expenses = [doc.to_dict() for doc in docs]
-            return [(e["amount"], e["category"], e["name"], e.get("image_path"), e["date"]) for e in expenses]
+            filtered = [
+                e for e in expenses 
+                if e.get("is_recurring") is True and start_date <= e.get("date", "") <= end_date
+            ]
+            return [(e["amount"], e["category"], e["name"], e.get("image_path"), e["date"]) for e in filtered]
         elif self.is_mongo:
             expenses = self.db.expenses.find({
                 "user_id": user_id,
@@ -641,13 +648,8 @@ class Database:
 
     def count_recurring_expenses(self, user_id, month_str):
         if self.is_firebase:
-            year, month = map(int, month_str.split('-'))
-            _, last_day = calendar.monthrange(year, month)
-            start_date = f"{year:04d}-{month:02d}-01"
-            end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
-            
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("is_recurring", "==", True).where("date", ">=", start_date).where("date", "<=", end_date).stream()
-            return sum(1 for _ in docs)
+            expenses = self.get_recurring_expenses(user_id, month_str)
+            return len(expenses)
         elif self.is_mongo:
             return self.db.expenses.count_documents({
                 "user_id": user_id,
@@ -692,10 +694,11 @@ class Database:
 
     def get_expenses_by_date_range(self, user_id, start_date, end_date):
         if self.is_firebase:
-            docs = self.db.collection('expenses').where("user_id", "==", user_id).where("date", ">=", start_date).where("date", "<=", end_date).stream()
+            docs = self.db.collection('expenses').where("user_id", "==", user_id).stream()
             expenses = [e.to_dict() for e in docs]
-            expenses.sort(key=lambda x: x.get('date', ''), reverse=True)
-            return [(e["date"], e["amount"], e["category"], e["name"]) for e in expenses]
+            filtered = [e for e in expenses if start_date <= e.get("date", "") <= end_date]
+            filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+            return [(e["date"], e["amount"], e["category"], e["name"]) for e in filtered]
         elif self.is_mongo:
             expenses = self.db.expenses.find({
                 "user_id": user_id,
