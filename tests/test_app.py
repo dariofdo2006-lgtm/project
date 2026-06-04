@@ -152,6 +152,17 @@ class BudgetCalendarAppTest(unittest.TestCase):
         )
         self.assertEqual(invalid_amount.status_code, 400)
 
+    def test_favicon_ico_served(self):
+        response = self.client.get("/favicon.ico")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "image/vnd.microsoft.icon")
+        response.close()
+
+    def test_redirect_www_functionality(self):
+        response = self.client.get("/login", headers={"Host": "www.example.com"})
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.headers["Location"], "http://example.com/login")
+
 
 if __name__ == "__main__":
     unittest.main()

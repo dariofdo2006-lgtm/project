@@ -425,10 +425,19 @@ if (document.getElementById('auth-form')) {
     }
     
     if (switchBtn) {
-        switchBtn.addEventListener('click', () => {
-            updateAuthMode(!isLogin);
+        switchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const nextModeIsLogin = !isLogin;
+            const newUrl = nextModeIsLogin ? '/login' : '/login?mode=signup';
+            window.history.pushState({ isLogin: nextModeIsLogin }, '', newUrl);
+            updateAuthMode(nextModeIsLogin);
         });
     }
+
+    window.addEventListener('popstate', () => {
+        const signupMode = new URLSearchParams(window.location.search).get('mode') === 'signup';
+        updateAuthMode(!signupMode, false);
+    });
 
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -463,3 +472,19 @@ if (document.getElementById('auth-form')) {
         }
     });
 }
+
+// Global click handler for edit buttons using data attributes
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList && e.target.classList.contains('edit-btn')) {
+        const btn = e.target;
+        openEditModal(
+            btn.dataset.id,
+            btn.dataset.date,
+            btn.dataset.amount,
+            btn.dataset.category,
+            btn.dataset.name,
+            btn.dataset.receipt == '1',
+            btn.dataset.recurring === 'true' || btn.dataset.recurring === '1'
+        );
+    }
+});

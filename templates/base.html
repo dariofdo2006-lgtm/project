@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <meta name="description" content="SpendWise: Track spending, income, and monthly cash flow in one focused budget calendar.">
+    <meta name="description" content="{% block meta_description %}SpendWise: Track spending, income, and monthly cash flow in one focused budget calendar.{% endblock %}">
     <title>{% block title %}SpendWise{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -131,7 +134,9 @@
         </main>
     </div>
 
-    {% block modals %}{% endblock %}
+    {% block modals %}
+    {% include "transaction_modal.html" %}
+    {% endblock %}
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

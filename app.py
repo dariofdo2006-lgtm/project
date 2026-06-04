@@ -7,8 +7,9 @@ import math
 from datetime import datetime, timedelta
 import json
 import csv
+from urllib.parse import urlparse, urlunparse
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, g
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, g, send_from_directory
 from werkzeug.exceptions import RequestEntityTooLarge
 
 def load_env_file(path=".env"):
@@ -63,9 +64,19 @@ app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "0
 @app.before_request
 def redirect_www():
     """Redirect www to non-www domain with 301."""
-    if request.host.startswith('www.'):
-        new_url = request.url.replace('www.', '', 1)
+    host = request.host
+    if host.startswith('www.'):
+        url_parts = list(urlparse(request.url))
+        if url_parts[1].startswith('www.'):
+            url_parts[1] = url_parts[1][4:]
+        new_url = urlunparse(url_parts)
         return redirect(new_url, code=301)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')

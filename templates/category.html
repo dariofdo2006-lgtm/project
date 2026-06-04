@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% block title %}SpendWise - Transactions for {{ category_name }}{% endblock %}
+{% block meta_description %}Manage and view all SpendWise budget transactions categorized under {{ category_name }}.{% endblock %}
+
 {% block topbar_title %}Category: {{ category_name }}{% endblock %}
 
 {% block content %}
@@ -22,7 +25,7 @@
                             {% if e[5] %}
                             <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none; font-size:14px;">🧾 View</a>
                             {% endif %}
-                            <button class="btn-text" style="color:var(--brand-blue)" onclick='openEditModal({{ e[0] }}, {{ e[1]|tojson }}, {{ e[2] }}, {{ e[3]|tojson }}, {{ e[4]|tojson }}, {{ e[6]|default(0)|tojson }})'>Edit</button>
+                            <button class="btn-text edit-btn" style="color:var(--brand-blue)" data-id="{{ e[0] }}" data-date="{{ e[1] }}" data-amount="{{ e[2] }}" data-category="{{ e[3] }}" data-name="{{ e[4] }}" data-receipt="{{ e[5] }}" data-recurring="{{ e[6]|default(false)|lower }}">Edit</button>
                             <button class="btn-text" style="color:var(--danger)" onclick="deleteExpense({{ e[0] }})">Delete</button>
                         </div>
                     </div>

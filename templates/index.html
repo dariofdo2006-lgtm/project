@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% block title %}SpendWise - Monthly Budget Calendar Dashboard{% endblock %}
+{% block meta_description %}SpendWise monthly budget calendar: track and manage your income, expenses, and cash flow in one focused view.{% endblock %}
+
 {% block head %}
 <script>
     window.expenseCats = {{ categories|tojson }};
@@ -198,7 +201,7 @@
                             {% if e[5] %}
                             <a href="/api/receipt/{{ e[0] }}" target="_blank" style="color:var(--brand-blue); text-decoration:none;">Receipt</a>
                             {% endif %}
-                            <span style="cursor:pointer; color:var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--brand-blue)'" onmouseout="this.style.color='var(--text-muted)'" onclick="openEditModal({{ e[0]|tojson }}, {{ e[1]|tojson }}, {{ e[2]|tojson }}, {{ e[3]|tojson }}, {{ e[4]|tojson }}, {{ e[5]|tojson }}, {{ e[6]|default(false)|tojson }})">Edit</span>
+                            <span class="edit-btn" style="cursor:pointer; color:var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--brand-blue)'" onmouseout="this.style.color='var(--text-muted)'" data-id="{{ e[0] }}" data-date="{{ e[1] }}" data-amount="{{ e[2] }}" data-category="{{ e[3] }}" data-name="{{ e[4] }}" data-receipt="{{ e[5] }}" data-recurring="{{ e[6]|default(false)|lower }}">Edit</span>
                         </div>
                     </div>
                 </div>
@@ -215,59 +218,7 @@
 {% endblock %}
 
 {% block modals %}
-<!-- Transaction Side Panel -->
-<div class="side-panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
-<div class="side-panel" id="side-panel">
-    <div class="side-panel-header">
-        <h3 id="modal-title">Add Transaction</h3>
-        <button class="close-btn" onclick="closePanel()">&times;</button>
-    </div>
-    
-    <form id="tx-form" onsubmit="saveTransaction(event)">
-        <input type="hidden" id="tx-id" name="id">
-        
-        <div class="input-group">
-            <label>Date</label>
-            <input type="date" id="tx-date" name="date" required class="unified-input">
-        </div>
-        
-        <div class="input-group">
-            <label>Type</label>
-            <select id="tx-type" name="type" onchange="updateCatDropdown()" class="unified-select">
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
-            <label>Category</label>
-            <select id="tx-category" name="category" required class="unified-select"></select>
-        </div>
-        
-        <div class="input-group">
-            <label>Amount ({{ currency }})</label>
-            <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required class="unified-input">
-        </div>
-        
-        <div class="input-group">
-            <label>Description / Name</label>
-            <input type="text" id="tx-name" name="name" required class="unified-input">
-        </div>
-        
-        <div class="input-group">
-            <label>Receipt Image (Optional)</label>
-            <input type="file" id="receipt-input" name="receipt" accept="image/*">
-            <button type="button" id="scan-receipt-btn" class="btn-outline" style="margin-top:10px; width:100%;" onclick="scanReceiptAndFill()">Scan Receipt & Auto Fill</button>
-            <small id="scan-status" style="display:block; margin-top:8px; color:var(--text-muted);"></small>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-top:30px;">
-            <button type="button" class="btn-primary" id="del-btn" style="flex: 1; margin-top: 0; background:var(--danger); display:none;" onclick="deleteCurrentTransaction()">Delete</button>
-            <button type="submit" class="btn-primary" style="flex: 1; margin-top: 0;">Save Transaction</button>
-        </div>
-    </form>
-</div>
-
+{{ super() }}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const grid = document.getElementById('calendar-grid');
