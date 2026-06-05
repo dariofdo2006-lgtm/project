@@ -6,52 +6,56 @@
         <button class="close-btn" onclick="closePanel()">&times;</button>
     </div>
     
-    <form id="tx-form" onsubmit="saveTransaction(event)">
-        <input type="hidden" id="tx-id" name="id">
-        
-        <div class="input-group">
-            <label>Date</label>
-            <input type="date" id="tx-date" name="date" required class="unified-input">
+    <form id="tx-form" onsubmit="saveTransaction(event)" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+        <div class="side-panel-body">
+            <input type="hidden" id="tx-id" name="id">
+            
+            <div class="input-group">
+                <label>Date</label>
+                <input type="date" id="tx-date" name="date" required class="unified-input">
+            </div>
+            
+            <div class="input-group">
+                <label>Type</label>
+                <select id="tx-type" name="type" onchange="updateCatDropdown()" class="unified-select">
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Category</label>
+                <select id="tx-category" name="category" required class="unified-select"></select>
+            </div>
+            
+            <div class="input-group">
+                <label>Amount ({{ currency }})</label>
+                <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required class="unified-input">
+            </div>
+            
+            <div class="input-group">
+                <label>Description / Name</label>
+                <input type="text" id="tx-name" name="name" required class="unified-input">
+            </div>
+            
+            <div class="input-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 5px;">
+                <input type="checkbox" id="tx-recurring" name="is_recurring" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="tx-recurring" style="margin-bottom: 0; cursor: pointer; font-size: 14px;">Mark as recurring (copy to next month)</label>
+            </div>
+            
+            <div class="input-group" style="margin-top: 15px;">
+                <label>Receipt Image (Optional)</label>
+                <input type="file" id="receipt-input" name="receipt" accept="image/*">
+                <button type="button" id="scan-receipt-btn" class="btn-outline" style="margin-top:10px; width:100%;" onclick="scanReceiptAndFill()">Scan Receipt & Auto Fill</button>
+                <small id="scan-status" style="display:block; margin-top:8px; color:var(--text-muted);"></small>
+            </div>
         </div>
         
-        <div class="input-group">
-            <label>Type</label>
-            <select id="tx-type" name="type" onchange="updateCatDropdown()" class="unified-select">
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
-            <label>Category</label>
-            <select id="tx-category" name="category" required class="unified-select"></select>
-        </div>
-        
-        <div class="input-group">
-            <label>Amount ({{ currency }})</label>
-            <input type="number" id="tx-amount" name="amount" step="0.01" min="0" required class="unified-input">
-        </div>
-        
-        <div class="input-group">
-            <label>Description / Name</label>
-            <input type="text" id="tx-name" name="name" required class="unified-input">
-        </div>
-        
-        <div class="input-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 5px;">
-            <input type="checkbox" id="tx-recurring" name="is_recurring" style="width: 18px; height: 18px; cursor: pointer;">
-            <label for="tx-recurring" style="margin-bottom: 0; cursor: pointer; font-size: 14px;">Mark as recurring (copy to next month)</label>
-        </div>
-        
-        <div class="input-group" style="margin-top: 15px;">
-            <label>Receipt Image (Optional)</label>
-            <input type="file" id="receipt-input" name="receipt" accept="image/*">
-            <button type="button" id="scan-receipt-btn" class="btn-outline" style="margin-top:10px; width:100%;" onclick="scanReceiptAndFill()">Scan Receipt & Auto Fill</button>
-            <small id="scan-status" style="display:block; margin-top:8px; color:var(--text-muted);"></small>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-top:30px;">
-            <button type="button" class="btn-primary" id="del-btn" style="flex: 1; margin-top: 0; background:var(--danger); display:none;" onclick="deleteCurrentTransaction()">Delete</button>
-            <button type="submit" class="btn-primary" style="flex: 1; margin-top: 0;">Save Transaction</button>
+        <div class="side-panel-footer">
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn-primary" id="del-btn" style="flex: 1; margin-top: 0; background:var(--danger); display:none;" onclick="deleteCurrentTransaction()">Delete</button>
+                <button type="submit" class="btn-primary" style="flex: 1; margin-top: 0;">Save Transaction</button>
+            </div>
         </div>
     </form>
 </div>
