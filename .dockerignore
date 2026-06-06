@@ -1,0 +1,11 @@
+.git
+.env
+.venv
+venv
+.local_packages
+.pytest_cache
+__pycache__
+*.pyc
+*.db
+budget.db
+serviceAccountKey.json
