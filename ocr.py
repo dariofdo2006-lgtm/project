@@ -1,7 +1,81 @@
 import re
 import io
-from PIL import Image, ImageOps
-import pytesseract
+import os
+import shutil
+
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    Image = None
+    ImageOps = None
+
+try:
+    import pytesseract
+except ImportError:
+    pytesseract = None
+
+WINDOWS_TESSERACT_PATHS = (
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+)
+
+
+def _existing_file(path):
+    return path if path and os.path.exists(path) else None
+
+
+def _candidate_tesseract_commands():
+    env_command = os.environ.get("TESSERACT_CMD")
+    if env_command:
+        yield env_command
+
+    if pytesseract:
+        configured = getattr(pytesseract.pytesseract, "tesseract_cmd", None)
+        if configured:
+            yield configured
+
+    yield "tesseract"
+
+    program_files = os.environ.get("ProgramFiles")
+    program_files_x86 = os.environ.get("ProgramFiles(x86)")
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    for base in (program_files, program_files_x86, local_app_data):
+        if base:
+            yield os.path.join(base, "Tesseract-OCR", "tesseract.exe")
+
+    for path in WINDOWS_TESSERACT_PATHS:
+        yield path
+
+
+def resolve_tesseract_command():
+    if not pytesseract:
+        return None
+
+    seen = set()
+    for command in _candidate_tesseract_commands():
+        if not command or command in seen:
+            continue
+        seen.add(command)
+
+        resolved = _existing_file(command)
+        if not resolved and os.path.basename(command) == command:
+            resolved = shutil.which(command)
+
+        if resolved:
+            pytesseract.pytesseract.tesseract_cmd = resolved
+            return resolved
+
+    return None
+
+def is_tesseract_available():
+    return resolve_tesseract_command() is not None
+
+def ocr_unavailable_message():
+    return (
+        "Receipt scanning is not available because the Tesseract OCR engine is "
+        "not installed or could not be found. Install Tesseract OCR, add it to "
+        "PATH, or set TESSERACT_CMD to the full tesseract.exe path."
+    )
 
 def guess_category_from_text(text):
     """Enhanced category guessing with transaction type detection"""
@@ -186,6 +260,8 @@ def extract_name_from_text(text):
 def scan_receipt_locally(file_bytes):
     if not Image or not ImageOps or not pytesseract:
         return None, "Local OCR dependencies missing. Install Pillow and pytesseract."
+    if not is_tesseract_available():
+        return None, ocr_unavailable_message()
     try:
         # Open and preprocess image for better OCR accuracy
         image = Image.open(io.BytesIO(file_bytes))
@@ -219,7 +295,9 @@ def scan_receipt_locally(file_bytes):
         # Use simple, reliable Tesseract configuration
         try:
             text = pytesseract.image_to_string(final_image, config="--psm 6 --oem 3")
-        except Exception as e:
+        except pytesseract.pytesseract.TesseractNotFoundError:
+            return None, ocr_unavailable_message()
+        except Exception:
             # Fallback to basic configuration
             text = pytesseract.image_to_string(final_image, config="--psm 6")
         
@@ -249,5 +327,7 @@ def scan_receipt_locally(file_bytes):
             "type": transaction_type
         }, None
         
+    except pytesseract.pytesseract.TesseractNotFoundError:
+        return None, ocr_unavailable_message()
     except Exception as e:
         return None, f"Local OCR failed: {e}"
