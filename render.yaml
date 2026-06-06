@@ -1,7 +1,7 @@
 services:
   - type: web
     name: budget-calendar
-    env: docker
+    runtime: docker
     dockerfilePath: ./Dockerfile
     envVars:
       - key: PYTHON_VERSION
