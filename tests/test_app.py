@@ -1,4 +1,5 @@
 import importlib
+import io
 import os
 import re
 import sys
@@ -86,6 +87,21 @@ class BudgetCalendarAppTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json()["success"])
 
+    def test_add_expense_allows_empty_description(self):
+        token = self.register_and_login("empty-description-user", "safe-pass-123")
+        response = self.client.post(
+            "/api/expense",
+            json={
+                "date": "2026-05-15",
+                "amount": "18",
+                "category": "Food",
+                "name": "",
+            },
+            headers={"X-CSRF-Token": token},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["success"])
+
     def test_plaintext_passwords_are_rejected(self):
         db = self.app_module.db
         db.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("plain-user", "secret"))
@@ -162,6 +178,33 @@ class BudgetCalendarAppTest(unittest.TestCase):
         response = self.client.get("/login", headers={"Host": "www.example.com"})
         self.assertEqual(response.status_code, 301)
         self.assertEqual(response.headers["Location"], "http://example.com/login")
+
+    def test_receipt_scan_returns_description_and_type(self):
+        token = self.register_and_login("scan-user", "safe-pass-123")
+
+        original_scan = self.app_module.scan_receipt_locally
+        self.app_module.scan_receipt_locally = lambda _file_bytes: ({
+            "name": "Corner Store",
+            "amount": 120.5,
+            "category": "Food",
+            "description": "Corner Store - Sandwich",
+            "type": "EXPENSE",
+        }, None)
+        try:
+            response = self.client.post(
+                "/api/receipt/scan",
+                data={"file": (io.BytesIO(b"fake-image"), "receipt.jpg")},
+                content_type="multipart/form-data",
+                headers={"X-CSRF-Token": token},
+            )
+        finally:
+            self.app_module.scan_receipt_locally = original_scan
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["data"]["description"], "Corner Store - Sandwich")
+        self.assertEqual(data["data"]["type"], "expense")
 
 
 if __name__ == "__main__":

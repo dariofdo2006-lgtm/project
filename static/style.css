@@ -1014,6 +1014,94 @@ h1, h2, h3, .topbar-title, .cal-title, .summary-title {
     padding: 0 24px;
 }
 
+.items-breakdown {
+    background: rgba(0, 0, 0, 0.16);
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    margin: -4px 0 20px;
+    padding: 12px;
+}
+
+.items-breakdown-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.items-breakdown-header label {
+    color: #e8edf8;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.items-breakdown-header span {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.items-list {
+    display: grid;
+    gap: 8px;
+}
+
+.item-row {
+    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(86px, 110px) 34px;
+    gap: 8px;
+}
+
+.item-row .unified-input {
+    height: 40px !important;
+    padding: 0 12px !important;
+    font-size: 14px !important;
+}
+
+.item-remove-btn {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0;
+    transition: all 0.2s ease;
+    width: 34px;
+}
+
+.item-remove-btn:hover {
+    border-color: rgba(239, 68, 68, 0.45);
+    color: var(--danger);
+}
+
+.add-item-btn {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.items-total {
+    align-items: center;
+    border-top: 1px solid var(--border-dark);
+    color: var(--text-muted);
+    display: flex;
+    font-size: 13px;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 10px;
+}
+
+.items-total strong {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
 .side-panel-footer {
     padding: 24px;
     background: var(--panel-dark);

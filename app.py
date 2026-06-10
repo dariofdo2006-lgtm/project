@@ -125,8 +125,8 @@ def parse_transaction_payload(data):
 
     category = str(data.get("category") or "").strip()
     name = str(data.get("name") or "").strip()
-    if not category or not name:
-        return None, "All fields required"
+    if not category:
+        return None, "Category is required"
 
     return {
         "date": date,
@@ -426,13 +426,18 @@ def scan_receipt():
     except (ValueError, TypeError):
         amount = None
     category = str(scanned.get("category", "")).strip()
+    tx_type = str(scanned.get("type", "")).strip().lower()
+    if tx_type not in {"expense", "income"}:
+        tx_type = ""
 
     return jsonify({
         "success": True,
         "data": {
             "name": name,
             "amount": amount,
-            "category": category
+            "category": category,
+            "description": str(scanned.get("description", "")).strip(),
+            "type": tx_type
         }
     })
 

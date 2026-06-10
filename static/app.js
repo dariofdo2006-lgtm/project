@@ -118,6 +118,9 @@ function openModal(dateStr) {
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-name').value = '';
     document.getElementById('receipt-input').value = '';
+    resetItemsBreakdown();
+    const recurringInput = document.getElementById('tx-recurring');
+    if (recurringInput) recurringInput.checked = false;
     setScanStatus('');
     
     document.getElementById('modal-title').innerText = 'Add Transaction';
@@ -136,6 +139,7 @@ function openEditModal(id, dateStr, amount, category, name, hasReceipt, isRecurr
     document.getElementById('tx-amount').value = amount;
     document.getElementById('tx-name').value = name;
     document.getElementById('receipt-input').value = '';
+    resetItemsBreakdown();
     const recurringInput = document.getElementById('tx-recurring');
     if (recurringInput) recurringInput.checked = Boolean(isRecurring);
     setScanStatus('');
@@ -171,6 +175,79 @@ function updateCatDropdown() {
         opt.innerText = c;
         catSelect.appendChild(opt);
     });
+}
+
+function getItemsCurrencySymbol() {
+    const breakdown = document.getElementById('items-breakdown');
+    return breakdown ? (breakdown.dataset.currency || '₹') : '₹';
+}
+
+function formatItemAmount(amount) {
+    const currency = getItemsCurrencySymbol();
+    const value = Number(amount) || 0;
+    return `${currency}${value.toLocaleString(undefined, {
+        minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2
+    })}`;
+}
+
+function updateItemsTotal() {
+    const rows = document.querySelectorAll('.item-row');
+    let total = 0;
+
+    rows.forEach((row) => {
+        const amountInput = row.querySelector('.item-amount-input');
+        const value = amountInput ? parseFloat(amountInput.value) : 0;
+        if (Number.isFinite(value) && value > 0) {
+            total += value;
+        }
+    });
+
+    const totalEl = document.getElementById('items-total-amount');
+    if (totalEl) totalEl.innerText = formatItemAmount(total);
+
+    const amountInput = document.getElementById('tx-amount');
+    if (amountInput && total > 0) {
+        amountInput.value = total.toFixed(2);
+    }
+}
+
+function addItemRow(name = '', amount = '') {
+    const list = document.getElementById('items-list');
+    if (!list) return;
+
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+        <input type="text" class="unified-input item-name-input" placeholder="Item Name" value="">
+        <input type="number" class="unified-input item-amount-input" placeholder="Amount" min="0" step="0.01" value="">
+        <button type="button" class="item-remove-btn" aria-label="Remove item">&times;</button>
+    `;
+
+    const nameInput = row.querySelector('.item-name-input');
+    const amountInput = row.querySelector('.item-amount-input');
+    const removeBtn = row.querySelector('.item-remove-btn');
+
+    if (nameInput) nameInput.value = name;
+    if (amountInput) {
+        amountInput.value = amount;
+        amountInput.addEventListener('input', updateItemsTotal);
+    }
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            updateItemsTotal();
+        });
+    }
+
+    list.appendChild(row);
+    updateItemsTotal();
+}
+
+function resetItemsBreakdown() {
+    const list = document.getElementById('items-list');
+    if (list) list.innerHTML = '';
+    updateItemsTotal();
 }
 
 function setScanStatus(message, isError = false) {
@@ -211,8 +288,10 @@ async function scanReceiptAndFill() {
         if (parsed.amount !== null && parsed.amount !== undefined) {
             document.getElementById('tx-amount').value = parsed.amount;
         }
-        if (parsed.type) {
-            document.getElementById('tx-type').value = parsed.type;
+        const parsedType = String(parsed.type || '').trim().toLowerCase();
+        if (['expense', 'income'].includes(parsedType)) {
+            document.getElementById('tx-type').value = parsedType;
+            updateCatDropdown();
         }
         if (parsed.description) {
             document.getElementById('tx-name').value = parsed.description;
